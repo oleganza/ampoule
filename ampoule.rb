@@ -44,6 +44,124 @@ require 'webrick'
 require 'CGI'
 
 module Ampoule
+  module FileHelper; end
+  module HTMLBuilder; end
+  module CSSBuilder; end
+  #
+  # GET
+  #
+  
+  class Index
+    include FileHelper
+    include HTMLBuilder
+    
+    attr_accessor :page_title
+    def initialize
+      super
+      init_html_builder
+      @page_title = project_title
+    end
+    
+    def read
+      html do
+        head do
+          meta "http-equiv" => "Content-Type", :content => "text/html; charset=UTF-8"
+          link :rel => "stylesheet", :href=>"/style.css", :type => "text/css"
+          title { page_title }
+        end
+        body do
+          form :action => "/title", :method => "POST" do
+            h1 { input(:value => page_title, :name => :title) }
+          end
+        end
+      end
+    end
+  end
+  
+  class Page
+    include FileHelper
+    include HTMLBuilder
+    
+    def initialize(id)
+      init_html_builder
+    end
+    
+    def read
+      
+    end
+  end
+  
+  #
+  # POST
+  #
+  
+  class TitleUpdate
+    include FileHelper
+    def initialize(query)
+      @query = query
+    end
+    def perform
+      new_title = @query["title"].first.to_s
+      set_project_title(new_title)
+      "/"
+    end
+  end
+  
+  #
+  # CSS
+  #
+  
+  class CSS
+    include CSSBuilder
+    def initialize
+      init_css_builder
+    end
+    def run
+      app_font = "1em Helvetica, sans-serif"
+      apply("body", 
+        :font => app_font, 
+        :color => "#333",
+        :margin => "3em 1em 1em 5em")
+      apply("h1", :font_size => 1.3.em) do
+        with("input",
+          :font => app_font,
+          :border => :none,
+          :width => "100%",
+          :outline_style => :none
+        )
+      end
+    end
+  end
+  
+  #
+  # Helpers
+  #
+  
+  module FileHelper
+    def file_contents_for_name(name)
+      path = "_ampoule/#{name}"
+      return File.open(path){|f|f.read} if File.readable?(path)
+      nil
+    end
+    
+    def set_file_contents_for_name(content, name)
+      path = "_ampoule/#{name}"
+      Dir.mkdir("_ampoule") if !File.exists?("_ampoule")
+      File.open(path, 'w'){|f|f.write(content)}
+    end
+    
+    def project_title
+      (file_contents_for_name("title.txt") || "Click here to change project name").strip
+    end
+
+    def set_project_title(new_title)
+      set_file_contents_for_name(new_title, "title.txt")
+    end
+  end
+  
+  #
+  # Content Builders
+  #
   
   module HTMLBuilder
     def init_html_builder
@@ -109,69 +227,9 @@ module Ampoule
     end
   end
   
-  
-  class Index
-    include HTMLBuilder
-    attr_accessor :page_title
-    def initialize
-      super
-      init_html_builder
-      @page_title = file_contents_for_name("title.txt") || "Click here to change project name"
-    end
-    
-    def file_contents_for_name(name)
-      path = "_ampoule/#{name}"
-      return File.open(path){|f|f.read} if File.readable?(path)
-      nil
-    end
-    
-    def read
-      html do
-        head do
-          meta "http-equiv" => "Content-Type", :content => "text/html; charset=UTF-8"
-          link :rel => "stylesheet", :href=>"/style.css", :type => "text/css"
-          title { page_title }
-        end
-        body do
-          form :action => "/title", :method => "POST" do
-            h1 { input(:value => page_title, :name => :title, :onclick => "this.focus(); this.select();") }
-          end
-        end
-      end
-    end
-  end
-  
-  class Page
-    include HTMLBuilder
-    def initialize(id)
-      init_html_builder
-    end
-    def read
-      
-    end
-  end
-  
-  class CSS
-    include CSSBuilder
-    def initialize
-      init_css_builder
-    end
-    def run
-      app_font = "1em Helvetica, sans-serif"
-      apply("body", 
-        :font => app_font, 
-        :color => "#333",
-        :margin => "3em 1em 1em 5em")
-      apply("h1", :font_size => 1.3.em) do
-        with("input",
-          :font => app_font,
-          :border => :none,
-          :width => "100%",
-          :outline_style => :none
-        )
-      end
-    end
-  end
+  #
+  # Server config
+  #
   
   class Server
     def initialize(opts = {})
@@ -192,25 +250,35 @@ module Ampoule
     end
     def do_GET(request, response)
       load(__FILE__) if ENV['AMPOULE_AUTORELOAD']
-      content_type = 
+      content_type = "text/html"
       if request.path == "/"
         body = Index.new.read
       elsif request.path == "/style.css"
         body = CSS.new.read
+        content_type = "text/css"
       else
         body = Page.new(request.path.to_s[1..-1]).read
       end
       response.status = 200
-      response['Content-Type'] = "text/html"
+      response['Content-Type'] = content_type
       response.body = body
     end
+    
     def do_POST(request, response)
       # TODO: do the job, get redirect url and set a header to redirect there
+      content_type = "text/html"
+      if request.path == "/title"
+        location = TitleUpdate.new(CGI::parse(request.body)).perform
+      else
+        raise "TODO: post to #{request.path}"
+      end
+      response.status = 301
+      response['Location'] = location
+      response['Content-Type'] = "text/html"
     end
   end
   
 end
-
 
 if $0 == __FILE__
   Ampoule::Server.new(:port => 8000).start
