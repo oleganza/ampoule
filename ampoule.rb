@@ -142,8 +142,10 @@ module Ampoule
   module FileHelper
     def file_contents_for_name(name)
       path = "_ampoule/#{name}"
-      return File.open(path){|f|f.read} if File.readable?(path)
-      nil
+      content = nil
+      content = File.open(path){|f|f.read}.to_s.strip if File.readable?(path)
+      return nil if content == ""
+      content
     end
     
     def set_file_contents_for_name(content, name)
