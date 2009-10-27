@@ -39,7 +39,7 @@
 # - browse per-page history
 # - configure server port
 # - platform-independent "open" shell command
-# - remember assignees in a .preferences file which is in .gitignore
+# - instead of priorities, add a checkbox "inbox": checked => p1, unchecked => p2 (checked on creation)
 
 require 'webrick'
 require 'CGI'
@@ -48,6 +48,72 @@ module Ampoule
   module FileHelper; end
   module HTMLBuilder; end
   module CSSBuilder; end
+
+  #
+  # Model
+  #
+  
+  class Task
+    
+    def initialize_with_raw_file(raw_file)
+      headers, @body = raw_file.split("\n\n", 2)
+      @headers = headers.strip.split("\n").inject({}) do |h, line|
+        name, value = line.strip.split(/:\s*/)
+        h[name] = value
+        h
+      end
+    end
+    
+    def id
+      @id ||= Time.now.strftime("%Y%m%d-%H%M%S-#{rand(2**16)}")
+    end
+    
+    def body
+      @body
+    end
+    
+    def title
+      @headers["Title"] || "Untitled"
+    end
+    
+    def person
+      @headers["Person"] || "nobody"
+    end
+    
+    def status
+      @headers["Status"] || "opened"
+    end
+    
+    def closed?
+      status == "closed"
+    end
+    
+    def opened?
+      !closed?
+    end
+    
+    def created_at
+      Time.parse(@headers["Created"]) || Time.now
+    end
+    
+    def modified_at
+      @modified_at ||= Time.parse(@headers["Modified"]) || Time.now
+    end
+    
+    def mark_as_modified
+      @modified_at = Time.now
+    end
+    
+    def to_raw_file
+      %{Title: #{title}\n} <<
+      %{Person: #{person}\n} <<
+      %{Status: #{status}\n} <<
+      %{Created: #{created_at}\n} <<
+      %{Modified: #{modified_at}\n} <<
+      %{\n#{body}\n}
+    end
+  end
+  
   
   #
   # GET
@@ -57,11 +123,12 @@ module Ampoule
     include FileHelper
     include HTMLBuilder
     
-    attr_accessor :page_title
+    attr_accessor :page_title, :tasks
     def initialize
       super
       init_html_builder
       @page_title = project_title
+      @tasks = []
     end
     
     def read
@@ -77,6 +144,17 @@ module Ampoule
           end
           
           br
+          
+          table :border => 0 do
+            tasks.each do |task|
+              tr do
+                td(:class => "task-id") { task.id }
+              end
+            end
+            
+          end
+          
+          
           
         end
       end
@@ -298,7 +376,7 @@ __END__
 1. Each item is a page which looks like HTTP request (headers + body):
 
 Title: html ui mockup\n
-Assigned: oleganza@gmail.com\n
+Person: oleganza\n
 Status: opened\n
 Created: Tue Oct 27 16:35:01 2009 +0100
 Modified: Tue Oct 29 22:01:56 2009 +0100
