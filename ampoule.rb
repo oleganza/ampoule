@@ -166,7 +166,8 @@ module Ampoule
           
           form(:action => "/", :method => "POST", :class => 'new-task') do
             
-            input(:name => "title", :value => "New task", :class => "empty", :onclick => "alert(this.classNames)")
+            onfocus = %{if (this.className == 'empty') {this.className = ''; this.value = '';}}
+            input(:name => "title", :value => "New task", :class => "empty", :onfocus => onfocus)
             
             
           end
