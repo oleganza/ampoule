@@ -1,3 +1,4 @@
+#!/usr/bin/env ruby
 # Updated: 27 October, 2009 by Oleg Andreev
 #
 #
@@ -55,7 +56,9 @@ module Ampoule
   
   class Task
     
-    def initialize_with_raw_file(raw_file)
+    def initialize_with_raw_file(id, raw_file)
+      @modified_at = nil
+      @id = id
       headers, @body = raw_file.split("\n\n", 2)
       @headers = headers.strip.split("\n").inject({}) do |h, line|
         name, value = line.strip.split(/:\s*/)
@@ -145,16 +148,28 @@ module Ampoule
           
           br
           
-          table :border => 0 do
+          table(:border => 0) do
             tasks.each do |task|
               tr do
-                td(:class => "task-id") { task.id }
+                td(:class => "task-title") do
+                  a(:href => "/#{task.id}"){ h(task.title) }
+                end
+                td(:class => "task-person") do
+                  h(task.person)
+                end
+                td(:class => "task-status #{task.status}") do
+                  h(task.status)
+                end
               end
             end
-            
           end
           
-          
+          form(:action => "/", :method => "POST", :class => 'new-task') do
+            
+            input(:name => "title", :value => "New task", :class => "empty", :onclick => "alert(this.classNames)")
+            
+            
+          end
           
         end
       end
@@ -201,17 +216,22 @@ module Ampoule
     end
     def run
       app_font = "1em Helvetica, sans-serif"
-      apply("body", 
+      apply(:body, 
         :font => app_font, 
         :color => "#333",
         :margin => "3em 1em 1em 5em")
-      apply("h1", :font_size => 1.3.em) do
-        with("input",
+      apply(:h1, :font_size => 1.3.em) do
+        with(:input,
           :font => app_font,
           :border => :none,
           :width => "100%",
           :outline_style => :none
         )
+      end
+      
+      with(".new-task") do
+        apply(:input, :font => app_font)
+        apply("input.empty", :color => "#999")
       end
     end
   end
@@ -221,6 +241,11 @@ module Ampoule
   #
   
   module FileHelper
+    
+    def h(html)
+      CGI::escapeHTML(html)
+    end
+    
     def file_contents_for_name(name)
       path = "_ampoule/#{name}"
       content = nil
@@ -293,7 +318,7 @@ module Ampoule
     end
     
     def apply(rule, props = nil, &blk)
-      @scope_stack.push(rule)
+      @scope_stack.push(rule.to_s)
       full_rule = @scope_stack.join(" ")
       @css_rules[full_rule] = (@css_rules[full_rule] || {}).merge(props) if props
       if blk
@@ -365,7 +390,10 @@ module Ampoule
 end
 
 if $0 == __FILE__
-  Ampoule::Server.new(:port => 8000).start
+  if !defined?(Ampoule::ServerInstance)
+    Ampoule::ServerInstance = Ampoule::Server.new(:port => 8000)
+    Ampoule::ServerInstance.start
+  end
 end
 
 
