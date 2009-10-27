@@ -309,6 +309,6 @@ can imagine.
 
 2. Items are stored under unique filenames:
 
-  _ampoule_tasks/ab58ef4da89b7c56ef2.amp
+  _ampoule_tasks/2009-10-27-18.15.45.463129.task
 
 
