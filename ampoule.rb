@@ -45,8 +45,8 @@ require 'CGI'
 
 module Ampoule
   
-  class HTMLBuilder
-    def initialize(*args, &blk)
+  module HTMLBuilder
+    def init_html_builder
       @_html_stack = [""]
     end
     def tag(name, attrs = {}, &blk)
@@ -54,7 +54,7 @@ module Ampoule
       buf << %{<#{name}}
       if attrs
         rendered_attrs = attrs.inject('') do |ra, (k,v)|
-          ra << " " << k << "=" << '"' << CGI::escapeHTML(v) << '"'
+          ra << " " << k.to_s << "=" << '"' << CGI::escapeHTML(v.to_s) << '"'
         end
         buf << " " << rendered_attrs
       end
@@ -73,22 +73,103 @@ module Ampoule
     end
   end
   
-  class IndexController < HTMLBuilder
+  module CSSBuilder
+    
+    class ::Numeric
+      def em; "#{self}em"; end
+      def px; "#{self}px"; end
+    end
+    
+    def init_css_builder
+      @css_rules = {}
+      @scope_stack = [];
+      run
+    end
+    
+    def with(*args, &blk)
+      apply(*args, &blk)
+    end
+    
+    def apply(rule, props = nil, &blk)
+      @scope_stack.push(rule)
+      full_rule = @scope_stack.join(" ")
+      @css_rules[full_rule] = (@css_rules[full_rule] || {}).merge(props) if props
+      if blk
+        yield
+      end
+      @scope_stack.pop
+    end
+    
+    def read
+      @css_rules.inject("") do |css, (k, v)|
+        css << k << " {\n" << (v.inject("") { |props, (p,pv)|
+          props << p.to_s.gsub("_","-") << ": #{pv};\n"
+        }) << "}\n"
+      end
+    end
+  end
+  
+  
+  class Index
+    include HTMLBuilder
+    attr_accessor :page_title
+    def initialize
+      super
+      init_html_builder
+      @page_title = file_contents_for_name("title.txt") || "Click here to change project name"
+    end
+    
+    def file_contents_for_name(name)
+      path = "_ampoule/#{name}"
+      return File.open(path){|f|f.read} if File.readable?(path)
+      nil
+    end
+    
     def read
       html do
         head do
-          title { "Ampoule" }
+          meta "http-equiv" => "Content-Type", :content => "text/html; charset=UTF-8"
+          link :rel => "stylesheet", :href=>"/style.css", :type => "text/css"
+          title { page_title }
         end
         body do
-          h1 { "Welcome!" }
+          form :action => "/title", :method => "POST" do
+            h1 { input(:value => page_title, :name => :title, :onclick => "this.focus(); this.select();") }
+          end
         end
       end
     end
   end
   
-  class PageController < HTMLBuilder
+  class Page
+    include HTMLBuilder
+    def initialize(id)
+      init_html_builder
+    end
     def read
       
+    end
+  end
+  
+  class CSS
+    include CSSBuilder
+    def initialize
+      init_css_builder
+    end
+    def run
+      app_font = "1em Helvetica, sans-serif"
+      apply("body", 
+        :font => app_font, 
+        :color => "#333",
+        :margin => "3em 1em 1em 5em")
+      apply("h1", :font_size => 1.3.em) do
+        with("input",
+          :font => app_font,
+          :border => :none,
+          :width => "100%",
+          :outline_style => :none
+        )
+      end
     end
   end
   
@@ -110,11 +191,14 @@ module Ampoule
       super(server)
     end
     def do_GET(request, response)
-      load __FILE__
+      load(__FILE__) if ENV['AMPOULE_AUTORELOAD']
+      content_type = 
       if request.path == "/"
-        body = IndexController.new.read
+        body = Index.new.read
+      elsif request.path == "/style.css"
+        body = CSS.new.read
       else
-        body = PageController.new(:id => request.path.to_s[1..-1]).read
+        body = Page.new(request.path.to_s[1..-1]).read
       end
       response.status = 200
       response['Content-Type'] = "text/html"
