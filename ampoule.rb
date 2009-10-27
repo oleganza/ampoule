@@ -110,6 +110,7 @@ module Ampoule
       super(server)
     end
     def do_GET(request, response)
+      load __FILE__
       if request.path == "/"
         body = IndexController.new.read
       else
