@@ -75,6 +75,9 @@ module Ampoule
           form :action => "/title", :method => "POST" do
             h1 { input(:value => page_title, :name => :title) }
           end
+          
+          br
+          
         end
       end
     end
@@ -178,13 +181,12 @@ module Ampoule
         rendered_attrs = attrs.inject('') do |ra, (k,v)|
           ra << " " << k.to_s << "=" << '"' << CGI::escapeHTML(v.to_s) << '"'
         end
-        buf << " " << rendered_attrs
+        buf << rendered_attrs
       end
       if blk
         @_html_stack.push("")
         buf << ">" << yield.to_s << "</#{name}>"
         @_html_stack.pop
-        buf << "</#{name}>"
       else
         buf << " />"
       end
