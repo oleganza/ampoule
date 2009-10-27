@@ -29,7 +29,7 @@
 
 #  TODO:
 # - implement minimal ui so that i can put the rest of this list under ampoule
-#   - webrick setup
+#   V webrick setup
 #   - show items list on GET /
 #   - show single item on GET /id
 #   - add item on POST /
@@ -39,6 +39,7 @@
 # - browse per-page history
 # - configure server port
 # - platform-independent "open" shell command
+# - remember assignees in a .preferences file which is in .gitignore
 
 require 'webrick'
 require 'CGI'
@@ -47,6 +48,7 @@ module Ampoule
   module FileHelper; end
   module HTMLBuilder; end
   module CSSBuilder; end
+  
   #
   # GET
   #
