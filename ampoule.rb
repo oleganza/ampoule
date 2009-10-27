@@ -55,6 +55,15 @@ module Ampoule
   #
   
   class Task
+    attr_accessor :body
+    
+    OPENED = 'opened'
+    CLOSED = 'closed'
+    
+    def initialize
+      @headers = {}
+      @body = ""
+    end
     
     def initialize_with_raw_file(id, raw_file)
       @modified_at = nil
@@ -67,12 +76,17 @@ module Ampoule
       end
     end
     
-    def id
-      @id ||= Time.now.strftime("%Y%m%d-%H%M%S-#{rand(2**16)}")
+    def to_raw_file
+      %{Title: #{title}\n} <<
+      %{Person: #{person}\n} <<
+      %{Status: #{status}\n} <<
+      %{Created: #{created_at}\n} <<
+      %{Modified: #{modified_at}\n} <<
+      %{\n#{body}\n}
     end
     
-    def body
-      @body
+    def id
+      @id ||= Time.now.strftime("%Y%m%d-%H%M%S-#{rand(2**16)}")
     end
     
     def title
@@ -84,11 +98,11 @@ module Ampoule
     end
     
     def status
-      @headers["Status"] || "opened"
+      @headers["Status"] || OPENED
     end
     
     def closed?
-      status == "closed"
+      status == CLOSED
     end
     
     def opened?
@@ -103,18 +117,36 @@ module Ampoule
       @modified_at ||= Time.parse(@headers["Modified"]) || Time.now
     end
     
+    # mutation methods
+    
+    def title=(t)
+      @headers['Title'] = t
+    end
+    
+    def person=(v)
+      @headers['Person'] = v
+    end
+    
+    def status=(s) 
+      if s == CLOSED || s == OPENED
+        @headers['Status'] = s
+      else
+        raise ArgumentError, "Task status could be either Task::OPENED or Task::CLOSED"
+      end
+    end
+    
+    def close
+      @headers['Status'] = CLOSED
+    end
+    
+    def open
+      @headers['Status'] = OPENED
+    end
+    
     def mark_as_modified
       @modified_at = Time.now
     end
     
-    def to_raw_file
-      %{Title: #{title}\n} <<
-      %{Person: #{person}\n} <<
-      %{Status: #{status}\n} <<
-      %{Created: #{created_at}\n} <<
-      %{Modified: #{modified_at}\n} <<
-      %{\n#{body}\n}
-    end
   end
   
   
@@ -141,35 +173,31 @@ module Ampoule
           link :rel => "stylesheet", :href=>"/style.css", :type => "text/css"
           title { page_title }
         end
-        body do
+        body :onload => "document.getElementById('newitem').focus()" do
           form :action => "/title", :method => "POST" do
             h1 { input(:value => page_title, :name => :title) }
           end
           
-          br
-          
-          table(:border => 0) do
-            tasks.each do |task|
-              tr do
-                td(:class => "task-title") do
-                  a(:href => "/#{task.id}"){ h(task.title) }
-                end
-                td(:class => "task-person") do
-                  h(task.person)
-                end
-                td(:class => "task-status #{task.status}") do
-                  h(task.status)
+          if !tasks.empty?
+            table(:border => 0, :class => "tasks") do
+              tasks.each do |task|
+                tr do
+                  td(:class => "task-title") do
+                    a(:href => "/#{task.id}"){ h(task.title) }
+                  end
+                  td(:class => "task-person") do
+                    h(task.person)
+                  end
+                  td(:class => "task-status #{task.status}") do
+                    h(task.status)
+                  end
                 end
               end
             end
           end
           
           form(:action => "/", :method => "POST", :class => 'new-task') do
-            
-            onfocus = %{if (this.className == 'empty') {this.className = ''; this.value = '';}}
-            input(:name => "title", :value => "New task", :class => "empty", :onfocus => onfocus)
-            
-            
+            input(:name => "title", :value => "", :id => :newitem)
           end
           
         end
@@ -206,6 +234,21 @@ module Ampoule
     end
   end
   
+  class TaskCreate
+    include FileHelper
+    def initialize(query)
+      @query = query
+    end
+    def perform
+      title = @query["title"].first.to_s
+      task = Task.new
+      task.title = title
+      save_task(task)
+      "/"
+    end
+  end
+  
+  
   #
   # CSS
   #
@@ -231,8 +274,7 @@ module Ampoule
       end
       
       with(".new-task") do
-        apply(:input, :font => app_font)
-        apply("input.empty", :color => "#999")
+        apply(:input, :font => app_font, :width => "60%")
       end
     end
   end
@@ -267,6 +309,19 @@ module Ampoule
 
     def set_project_title(new_title)
       set_file_contents_for_name(new_title, "title.txt")
+    end
+
+    def task_by_id(id)
+      raw_contents = file_contents_for_name(id)
+      return nil if !raw_contents
+      t = Task.new
+      t.initialize_with_raw_file(raw_contents)
+      t
+    end
+        
+    def save_task(task)
+      raw_contents = task.to_raw_file
+      set_file_contents_for_name(task.id, raw_contents)
     end
   end
   
@@ -379,6 +434,8 @@ module Ampoule
       content_type = "text/html"
       if request.path == "/title"
         location = TitleUpdate.new(CGI::parse(request.body)).perform
+      elsif request.path == "/"
+        location = TaskCreate.new(CGI::parse(request.body)).perform
       else
         raise "TODO: post to #{request.path}"
       end
