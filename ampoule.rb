@@ -258,7 +258,7 @@ module Ampoule
         
         small(:style => %{position:absolute; top:1em;}) { a(:href => "/") { project_title + " index" } }
         
-        form(:action => ".", :method => "POST", :class => 'edit-task') do
+        form(:action => "/#{task.id}", :method => "POST", :class => 'edit-task') do
           h1 { input(:name => "title", :value => task.title, :class => "task-title") }
           
           # here goes body
@@ -635,6 +635,6 @@ can imagine.
 
 2. Items are stored under unique filenames:
 
-  _ampoule_tasks/2009-10-27-18.15.45.463129.task
+  _ampoule_tasks/2009-10-27-18.15.45.463129.amp
 
 
