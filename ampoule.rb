@@ -76,6 +76,7 @@ module Ampoule
         h[name] = value
         h
       end
+      @body ||= ""
     end
     
     def to_raw_file
@@ -84,7 +85,7 @@ module Ampoule
       %{Status: #{status}\n} <<
       %{Created: #{created_at}\n} <<
       %{Modified: #{modified_at}\n} <<
-      %{\n#{body}\n}
+      %{\n#{body}}
     end
     
     def id
@@ -119,6 +120,10 @@ module Ampoule
       @modified_at ||= (@headers["Modified"] && Time.parse(@headers["Modified"]) || Time.now)
     end
     
+    def comments
+      Comment.comments_from_raw_file(body)
+    end
+    
     # mutation methods
     
     def title=(t)
@@ -145,8 +150,41 @@ module Ampoule
       @headers['Status'] = OPENED
     end
     
+    def add_comment(current_person, comment)
+      body << Comment.new(current_person, comment).to_raw_file
+    end
+    
     def mark_as_modified
       @modified_at = Time.now
+    end
+    
+  end
+  
+  class Comment
+    attr_accessor :person, :body, :date
+    def initialize(person, body, date = Time.now)
+      @person = person
+      @body = body
+      @date = date
+    end
+    
+    def to_raw_file
+      %{\n\n@comment\n} <<
+      %{@author #{@person.gsub(/[\r\n]/,'')}\n} <<
+      %{@date #{@date}\n} <<
+      %{\n#{@body}}
+    end
+    
+    def self.comments_from_raw_file(body)
+      chunks = body.split("\n@comment\n")[1..-1] || []
+      chunks.map do |chunk|
+        if chunk.strip =~ /@author ([^\n]+)\n@date ([^\n]+)\n(.*)/m
+          self.new($1, $3, Time.parse($2))
+        else
+          puts "Ampoule::Comment: could not parse chunk:\n#{chunk}\n(end of chunk)"
+          nil
+        end
+      end
     end
     
   end
@@ -226,7 +264,7 @@ module Ampoule
                   input(:name => "title", :value => "", :id => :newitemtitle)
                 end
                 td :class => "task-person" do
-                  label = 'person'
+                  label = 'nobody'
                   onfocus = "if (this.value === #{label.inspect}) {this.value = ''; this.className = ''}"
                   input(:name => "person", :value => ($last_assigned_person || label), :id => :newitemperson, :onfocus => onfocus, :class => ($last_assigned_person ? "" : "empty"))
                   text("&nbsp;")
@@ -261,12 +299,19 @@ module Ampoule
         form(:action => "/#{task.id}", :method => "POST", :class => 'edit-task') do
           h1 { input(:name => "title", :value => task.title, :class => "task-title") }
           
-          # here goes body
+          task.comments.each do |comment|
+            label :class => "comment-label" do
+              text(h(comment.person))
+              small { comment.date.to_s }
+            end
+            br
+            tag("p") { h(comment.body) }
+          end
+          
           br
           
-          label do
-            text(h("oleg"))
-          end
+          input :class => "current-person", :name => "current_person", :value => current_user_name, :tabindex=>"-1"
+          
           br
           
           textarea(:name => "comment", :id => "comment", :rows => 10, :cols => 80) { }
@@ -363,6 +408,14 @@ module Ampoule
           :width => "70%"
         )
         
+        apply("input.current-person", 
+          :border => :none,
+          :padding => 0,
+          :margin => 0,
+          :outline_style => :none,
+          :font_family => font_family,
+          :font_size => 0.9.em)
+        
         apply("div.panel", :position => :relative, :width => "70%", :overflow => :hidden, :margin_bottom => "0.5em") 
       
         with(".assign-to", :float => :right, :font_size => "0.9em") do
@@ -421,9 +474,20 @@ module Ampoule
     def perform
       title = @query["title"].first.to_s
       person = @query["person"].first.to_s
-      
+
       @task.title = title
       @task.person = person
+      
+      comment = @query["comment"].first.to_s.strip
+      if comment.length > 0
+        current_person = @query["current_person"].first.to_s
+
+        if current_person != current_user_name && current_person.size > 0
+          self.current_user_name = current_person # remember new value
+        end
+        
+        @task.add_comment(current_person, comment)
+      end
       
       @task.close if !@query["close"].empty?
       @task.open  if !@query["reopen"].empty?
@@ -441,7 +505,23 @@ module Ampoule
   # Helpers
   #
   
+  module GitHelper
+    def git_user_name
+      @git_user_name ||= `git config user.name`.strip
+    end
+    
+    def git_user_email
+      @git_user_email ||= `git config user.email`.strip
+    end
+    
+    def git_user_name=(n)
+      n = n.gsub(/["`'\\\n\r\t\v]+/, '')
+      `git config user.name "#{n}"`
+    end
+  end
+  
   module FileHelper
+    include GitHelper
     
     def h(html)
       CGI::escapeHTML(html)
@@ -497,6 +577,18 @@ module Ampoule
       raw_contents = task.to_raw_file
       set_file_contents_for_name(raw_contents, %{#{task.id}.amp})
     end
+    
+    def current_user_name=(n)
+      self.git_user_name = n
+    end
+    
+    def current_user_name
+      n = git_user_name
+      n = git_user_email if n.to_s == ''
+      n = "Anonymous"    if n.to_s == ''
+      n
+    end
+    
   end
   
   #
