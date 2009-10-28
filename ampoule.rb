@@ -1,5 +1,5 @@
 #!/usr/bin/env ruby
-# Updated: 27 October, 2009 by Oleg Andreev
+# Updated: 28 October, 2009 by Oleg Andreev
 #
 #
 #                        MIT LICENSE
@@ -27,19 +27,13 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 
-
-#  TODO:
-# - push/pull automatically
-# - search index
-# - browse per-page history
-# - configure server port
-# - platform-independent "open" shell command
-# - instead of priorities, add a checkbox "inbox": checked => p1, unchecked => p2 (checked on creation)
-
 require 'webrick'
 require 'CGI'
 
 module Ampoule
+  
+  VERSION = "0.1"
+  
   module FileHelper; end
   module HTMLBuilder; end
   module CSSBuilder; end
