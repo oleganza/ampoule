@@ -646,7 +646,7 @@ module Ampoule
       @puller = Thread.new do
         loop do
           sleep(1 + rand(1))
-          @queue.push(:pull)
+          @queue.push(:pull) if @queue.size < 2
         end
       end
       
