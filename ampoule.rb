@@ -175,7 +175,7 @@ module Ampoule
           link :rel => "stylesheet", :href=>"/style.css", :type => "text/css"
           title { page_title }
         end
-        body :onload => "document.getElementById('newitem').focus()" do
+        body :onload => "document.getElementById('newitemtitle').focus()" do
           form :action => "/title", :method => "POST" do
             h1 { input(:value => page_title, :name => :title) }
           end
@@ -240,28 +240,33 @@ module Ampoule
       init_css_builder
     end
     def run
-      app_font = "1em Helvetica, sans-serif"
+      font_family = "Helvetica, sans-serif"
+      font = "100% #{font_family}"
       apply(:body, 
-        :font => app_font, 
+        :font => font, 
         :color => "#333",
         :margin => "3em 1em 1em 5em")
       apply(:h1, :font_size => 1.3.em) do
         with(:input,
-          :font => app_font,
+          :font => font,
           :border => :none,
           :width => "100%",
           :outline_style => :none
         )
       end
-      apply(".new-task input", :font => app_font, :font_size => 1.em, :margin_left => -3.px, :padding_left => 0.px)
+      apply(".new-task input", :font_family => font_family, :font_size => 1.0.em, :margin_left => -3.px, :padding_left => 0.px)
       apply(".empty", :color => "#999")
       apply(".tasks", :width=>"100%") do
+        apply("td", :font_family => font_family, :font_size => 0.9.em)
+        apply("td.task-person", :font_size => 0.83.em)
+        apply("td.task-status", :font_size => 0.83.em)
         apply("tfoot td", :padding_top=>"0.5em")
       end
-      
       apply(".task-title", :width=>"60%", :padding_right => "5px") do
         apply("input", :width=>"100%")
       end
+      apply("a", :color => "#333", :text_decoration => "none")
+      apply("a:hover", :color => "#000", :text_decoration => "underline")
     end
   end
   
