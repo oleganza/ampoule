@@ -566,9 +566,9 @@ module Ampoule
     
     def file_contents_for_path(path)
       content = nil
-      content = File.open(path){|f|f.read}.to_s.strip if File.readable?(path)
+      content = $file_buffer.read(path).to_s.strip
       return nil if content == ""
-      content      
+      content
     end
     
     def file_contents_for_name(name)
@@ -578,9 +578,8 @@ module Ampoule
     def set_file_contents_for_name(content, name)
       path = "_ampoule/#{name}"
       Dir.mkdir("_ampoule") if !File.exists?("_ampoule")
-      `git pull`
-      File.open(path, 'w'){|f|f.write(content)}
-      `git add .; git commit -m "updated #{name}"; git push`
+      
+      $file_buffer.write(path, content)
     end
     
     def project_title
@@ -628,6 +627,56 @@ module Ampoule
       n
     end
     
+  end
+  
+  require 'thread'
+  class FileSyncBuffer
+    def initialize
+      @buffer = {} # path => content
+      @queue = Queue.new
+      @mutex = Mutex.new
+      @syncer = Thread.new do
+        while msg = @queue.pop
+          if msg == :stop
+            puts "Ampoule::FileSyncBuffer: stopped."
+            break
+          end
+          
+          `git pull`
+          
+          paths = []
+          @mutex.synchronize do
+            @buffer.each do |path, data|
+              paths << path
+              File.open(path, 'w'){|f|f.write(data)}
+            end
+            @buffer = {}
+          end
+          
+          `git add .; git commit -m "updated #{paths.join(', ')}"; git push`
+          
+        end
+      end
+    end
+    
+    def stop
+      puts "Ampoule::FileSyncBuffer: stopping..."
+      @queue.push :stop
+      @syncer.join
+    end
+    
+    def read(path)
+      @mutex.synchronize do
+        @buffer[path] || (File.readable?(path) ? File.open(path){|f|f.read} : nil)
+      end
+    end
+    
+    def write(path, data)
+      @mutex.synchronize do
+        @buffer[path] = data
+      end
+      @queue.push(:sync)
+    end
   end
   
   #
@@ -710,6 +759,7 @@ module Ampoule
     def initialize(opts = {})
       @opts = opts
       @port = @opts[:port].to_i
+      $file_buffer = FileSyncBuffer.new
       begin
         @server = WEBrick::HTTPServer.new(:Port => @port)
       rescue Errno::EADDRINUSE
@@ -721,7 +771,7 @@ module Ampoule
     end
     def start
       Thread.new { sleep(1); system(%{open http://localhost:#{@port}/}) }
-      trap("INT") { @server.shutdown }
+      trap("INT") { @server.shutdown; $file_buffer.stop }
       @server.start
     end
   end

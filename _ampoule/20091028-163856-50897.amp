@@ -1,8 +1,8 @@
 Title: formatting task
-Person: nobody
+Person: oleg
 Status: closed
 Created: Sat Oct 28 00:00:00 +0200 2000
-Modified: Wed Oct 28 17:37:02 +0100 2009
+Modified: Wed Oct 28 18:18:31 +0100 2009
 
 
 @comment
@@ -85,3 +85,9 @@ Don't you think?
 2. Two 
 3. Three 
 4. Four
+
+@comment
+@author Oleg Andreev
+@date Wed Oct 28 18:18:31 +0100 2009
+
+new comment with buffered file i/o
