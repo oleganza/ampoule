@@ -335,7 +335,7 @@ module Ampoule
       apply(".new-task input", :font_family => font_family, :font_size => 1.0.em, :margin_left => -3.px, :padding_left => 0.px)
       apply(".empty", :color => "#999")
       apply(".tasks", :width=>"100%", :margin_left => "-1px") do
-        apply("td", :font_family => font_family, :font_size => 0.9.em, :padding => "0.1em 0 0.1em 0")
+        apply("td", :font_family => font_family, :font_size => 0.9.em, :padding => "0.1em 0 0.2em 0")
         apply("td.task-person", :font_size => 0.83.em)
         apply("tfoot td", :padding_top=>"0.5em")
         
