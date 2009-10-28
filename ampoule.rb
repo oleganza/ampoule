@@ -1,8 +1,15 @@
 #!/usr/bin/env ruby
 # Updated: 28 October, 2009 by Oleg Andreev
 #
+# ABOUT
 #
-#                        MIT LICENSE
+# Ampoule is a simple distributed bugtracker based on git.
+# For each project you should setup a separate git repository and run ./ampoule.rb to get access to the UI
+# You may open and close tasks, assign them to someone and add comments.
+# Data is automatically synchronized with the remote repository.
+#
+#
+# MIT LICENSE
 #
 # Copyright (c) 2009 Oleg Andreev <oleganza@gmail.com>
 # 
