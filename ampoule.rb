@@ -305,18 +305,13 @@ module Ampoule
                 text(h(comment.person))
                 small { comment.date.to_s }
               end
-              tag("p") { h(comment.body) }
+              text(formatted_text(comment.body))
             end
           end
-          
           br
-          
           input :class => "current-person", :name => "current_person", :value => current_user_name, :tabindex=>"-1"
-          
           br
-          
           textarea(:name => "comment", :id => "comment", :rows => 10, :cols => 80) { }
-          
           div :class => "panel" do
             div :class => "assign-to" do
               text("assigned to ")
@@ -334,11 +329,28 @@ module Ampoule
               input :type => :submit, :name => :reopen, :value => "Reopen", :disabled => (task.opened? ? :disabled : nil)
             end
           end
-        end
+        end # form
         
-      end
+      end # super do
+    end # read
+    
+    def formatted_text(text)
+      text = text.gsub(/\r\n/, "\n").gsub(/\r/, "\n")
+      paragraphs = text.split(/\n\n+/)
+      paragraphs.map do |paragraph|
+        if paragraph[/\n[ \t]+/]
+          %{<code><pre>#{h(paragraph)}</pre></code>}
+        else
+          %{<p>#{hbr(paragraph)}</p>}
+        end
+      end.join
     end
-  end
+    
+    def hbr(text)
+      h(text.strip).gsub(/\n/, "<br/>")
+    end
+    
+  end # Page
   
   #
   # CSS
@@ -415,7 +427,8 @@ module Ampoule
           :margin => 0,
           :outline_style => :none,
           :font_family => font_family,
-          :font_size => 0.9.em)
+          :font_size => 0.8.em,
+          :font_weight => "bold")
         
         apply("div.panel", :position => :relative, :width => "70%", :overflow => :hidden, :margin_bottom => "0.5em") 
       
@@ -431,8 +444,8 @@ module Ampoule
       end
       
       with(".comments") do
-        apply("label", :font_size => 0.9.em, :color => "black", :display => "block", :margin => "1.6em 0 0.6em 0") do
-          apply("small", :font_size => 0.8.em, :color => "#666", :padding_left => 0.9.em)
+        apply("label", :font_size => 0.8.em, :font_weight => "bold", :display => "block", :margin => "2em 0 0.6em 0") do
+          apply("small", :font_size => 1.em, :color => "#999", :padding_left => 0.9.em, :font_weight => "normal")
         end
         apply("p", :font_size => 0.9.em, :margin => "0.3em 0 0.6em 0", :width => "70%", :line_height => "130%")
       end

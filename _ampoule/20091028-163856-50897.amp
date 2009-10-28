@@ -2,7 +2,7 @@ Title: new task
 Person: nobody
 Status: opened
 Created: Sat Oct 28 00:00:00 +0200 2000
-Modified: Wed Oct 28 16:51:50 +0100 2009
+Modified: Wed Oct 28 17:15:01 +0100 2009
 
 
 @comment
@@ -28,3 +28,60 @@ asd
 @date Wed Oct 28 16:51:42 +0100 2009
 
 hello
+
+@comment
+@author Oleg Andreev
+@date Wed Oct 28 17:03:36 +0100 2009
+
+Another comment
+
+@comment
+@author Oleg Andreev
+@date Wed Oct 28 17:10:33 +0100 2009
+
+Line1
+line2
+
+line3
+
+@comment
+@author Oleg Andreev
+@date Wed Oct 28 17:12:40 +0100 2009
+
+some piece of code:
+
+if song.artist == "Gillespie" then handle = "Dizzy"
+  elsif song.artist == "Parker" then handle = "Bird"
+else handle = "unknown"
+end
+
+@comment
+@author Oleg Andreev
+@date Wed Oct 28 17:14:01 +0100 2009
+
+this routine shows something:
+
+    def formatted_text(text)
+      text = text.gsub(/\r\n/, "\n").gsub(/\r/, "\n")
+      paragraphs = text.split(/\n\n+/)
+      paragraphs.map do |paragraph|
+        if paragraph[/\n[ \t]+/]
+          %{<code><pre>#{h(paragraph)}</pre></code>}
+        else
+          %{<p>#{hbr(paragraph)}</p>}
+        end
+      end.join
+    end
+
+Now we understand why this is the way it is.
+
+Don't you think?
+
+@comment
+@author Oleg Andreev
+@date Wed Oct 28 17:15:01 +0100 2009
+
+1. One
+2. Two 
+3. Three 
+4. Four
