@@ -469,11 +469,18 @@ module Ampoule
   class Server
     def initialize(opts = {})
       @opts = opts
-      @server = WEBrick::HTTPServer.new(:Port => @opts[:port])
+      @port = @opts[:port].to_i
+      begin
+        @server = WEBrick::HTTPServer.new(:Port => @port)
+      rescue Errno::EADDRINUSE
+        @port += 1
+        puts "Ampoule::Server: trying to bind to port #{@port}..."
+        retry
+      end
       @server.mount "/", WebrickHandle
     end
     def start
-      Thread.new { sleep(1); system(%{open http://localhost:#{@opts[:port]}/}) }
+      Thread.new { sleep(1); system(%{open http://localhost:#{@port}/}) }
       trap("INT") { @server.shutdown }
       @server.start
     end
