@@ -72,7 +72,7 @@ module Ampoule
       @id = id
       headers, @body = raw_file.split("\n\n", 2)
       @headers = headers.strip.split("\n").inject({}) do |h, line|
-        name, value = line.strip.split(/:\s*/)
+        name, value = line.strip.split(/:\s*/,2)
         h[name] = value
         h
       end
@@ -236,10 +236,11 @@ module Ampoule
       table({:border => 0, :class => cls}.merge(opts)) do
         tasks.each do |task|
           tr do
-            td(:class => "task-title") do
+            td(:class => "task-title textual") do
               a(:href => "/#{task.id}"){ h(task.title) }
+              small { task.modified_at.to_relative_string_if_recent }
             end
-            td(:class => "task-person") do
+            td(:class => "task-person textual") do
               h(task.person)
             end
           end
@@ -255,7 +256,7 @@ module Ampoule
         form :action => "/title", :method => "POST" do
           h1(:class => 'index-title') { input(:value => page_title, :name => :title) }
         end
-
+        
         form(:action => "/", :method => "POST", :class => 'new-task') do
           tasks_table(opened_tasks, :class => "opened-tasks") do
             tfoot do
@@ -358,12 +359,20 @@ module Ampoule
       return "now" if diff < 2
       return "#{diff} seconds ago" if diff < 50
       return "one minute ago" if diff < 60*2
-      return "#{diff/60} minutes ago" if diff < 60*60
+      return "#{diff/60} minutes ago" if diff/60/60 <= 1
       return "#{diff/60/60} hours ago" if diff < 60*60*18
       return "yesterday" if diff/60/60/24 <= 1
       return "#{diff/60/60/24} days ago" if diff < 60*60*24*7
       return strftime("%B %d") if diff < 60*60*24*30*3
       return strftime("%B %d, %Y")
+    end
+    
+    def to_relative_string_if_recent
+      if Time.now - self < 3600
+        to_relative_string
+      else
+        ""
+      end
     end
   end
   
@@ -409,6 +418,7 @@ module Ampoule
       apply(".empty", :color => "#999")
       apply(".tasks", :width=>"100%", :margin_left => "-1px") do
         apply("td", :font_family => font_family, :font_size => 0.9.em, :padding => "0.1em 0 0.2em 0")
+        apply("td.textual", :overflow => "hidden")
         apply("td.task-person", :font_size => 0.83.em)
         apply("tfoot td", :padding_top=>"0.5em")
         
@@ -418,6 +428,9 @@ module Ampoule
         apply(".task-title", :width=>"70%", :padding_right => "5px") do
           apply("input", :width=>"100%")
         end
+        
+        apply("small", :color => "#999", :font_size => "0.75em", :padding_left => "0.4em") 
+        
       end
       
       apply(".tasks.closed-tasks") do
