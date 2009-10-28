@@ -268,8 +268,17 @@ module Ampoule
             text(h("oleg"))
           end
           br
+          
           textarea(:name => "comment", :rows => 10, :cols => 80) { }
-          div :class => "buttons" do
+          
+          div :class => "panel" do
+            div :class => "assign-to" do
+              text("assigned to ")
+              input(:name => "person", :value => task.person)
+            end
+          end
+          
+          div :class => "buttons panel" do
             div :class => "status-buttons" do
               input :type => :submit, :name => :close, :value => "Close", :disabled => (task.closed? ? :disabled : nil)
               text("&nbsp;")
@@ -353,10 +362,16 @@ module Ampoule
           :word_spacing => :normal,
           :width => "70%"
         )
-      
-        apply(%{input[type="submit"]}, :font => font) 
         
-        apply("div.buttons", :position => :relative, :width => "70%", :overflow => :hidden) 
+        apply("div.panel", :position => :relative, :width => "70%", :overflow => :hidden, :margin_bottom => "0.5em") 
+      
+        with(".assign-to", :float => :right, :font_size => "0.9em") do
+          apply("input", :font_size => "1em", :font_family => font_family)
+        end
+      
+        apply(%{input[type="submit"]}, :font => font, :width => "5em")
+        
+        
         apply("div.status-buttons", :float => "left") 
         apply("div.save-button", :float => "right") 
         
