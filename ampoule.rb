@@ -207,17 +207,19 @@ module Ampoule
           form(:action => "/", :method => "POST", :class => 'new-task') do
             tasks_table(opened_tasks, :class => "opened-tasks") do
               tfoot do
-                td :class => "task-title" do
-                  input(:name => "title", :value => "", :id => :newitemtitle)
-                end
-                td :class => "task-person" do
-                  label = 'person'
-                  onfocus = "if (this.value === #{label.inspect}) {this.value = ''; this.className = ''}"
-                  input(:name => "title", :value => label, :id => :newitemperson, :onfocus => onfocus, :class => "empty")
-                  text("&nbsp;")
-                  input(:type => :submit, :value => "add")
-                end
-              end              
+                tr do
+                  td :class => "task-title" do
+                    input(:name => "title", :value => "", :id => :newitemtitle)
+                  end
+                  td :class => "task-person" do
+                    label = 'person'
+                    onfocus = "if (this.value === #{label.inspect}) {this.value = ''; this.className = ''}"
+                    input(:name => "person", :value => label, :id => :newitemperson, :onfocus => onfocus, :class => "empty")
+                    text("&nbsp;")
+                    input(:type => :submit, :value => "add")
+                  end # td
+                end # tr
+              end # tfoot
             end # tasks_table
           end # new task form
           
@@ -310,8 +312,10 @@ module Ampoule
     end
     def perform
       title = @query["title"].first.to_s
+      person = @query["person"].first.to_s
       task = Task.new
       task.title = title
+      task.person = person
       save_task(task)
       "/"
     end
@@ -403,9 +407,9 @@ module Ampoule
         @_html_stack.push("")
         r = yield
         r = "" if !r.is_a?(String)
-        buf << ">" << @_html_stack.pop << r << "</#{name}>"
+        buf << ">" << @_html_stack.pop << r << "</#{name}>\n"
       else
-        buf << " />"
+        buf << " />\n"
       end
       buf if @_html_stack.empty?
     end
