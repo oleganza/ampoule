@@ -250,11 +250,18 @@ module Ampoule
     def initialize(id)
       super()
       @task = task_by_id(id)
-      self.page_title = @task.title
+      self.page_title = @task.title + " (#{project_title})"
     end
     
     def read
       super do
+        
+        form(:action => ".", :method => "POST", :class => 'edit-task') do
+          input(:name => "title", :value => task.title, :class => "task-title")
+          
+          
+          
+        end
         
       end
     end
@@ -531,7 +538,7 @@ module Ampoule
       elsif request.path == "/"
         location = TaskCreate.new(CGI::parse(request.body)).perform
       else
-        raise "TODO: post to #{request.path}"
+        location = TaskUpdate.new(request.path.to_s[1..-1]).perform
       end
       response.status = 301
       response['Location'] = location
