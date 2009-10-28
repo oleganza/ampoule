@@ -33,7 +33,7 @@
 #   V webrick setup
 #   - show items list on GET /
 #   - show single item on GET /id
-#   - add item on POST /
+#   V add item on POST /
 #   - edit item on POST /id
 # - push/pull automatically
 # - search index
@@ -57,9 +57,11 @@ module Ampoule
   class Task
     attr_accessor :body
     
-    OPENED = 'opened'
-    CLOSED = 'closed'
-    
+    if !defined? OPENED
+      OPENED = 'opened'
+      CLOSED = 'closed'
+    end
+  
     def initialize
       @headers = {}
       @body = ""
@@ -158,12 +160,12 @@ module Ampoule
     include FileHelper
     include HTMLBuilder
     
-    attr_accessor :page_title, :tasks
+    attr_accessor :page_title, :opened_tasks
     def initialize
       super
       init_html_builder
       @page_title = project_title
-      @tasks = []
+      @opened_tasks = tasks
     end
     
     def read
@@ -178,9 +180,9 @@ module Ampoule
             h1 { input(:value => page_title, :name => :title) }
           end
           
-          if !tasks.empty?
+          if !opened_tasks.empty?
             table(:border => 0, :class => "tasks") do
-              tasks.each do |task|
+              opened_tasks.each do |task|
                 tr do
                   td(:class => "task-title") do
                     a(:href => "/#{task.id}"){ h(task.title) }
@@ -289,12 +291,15 @@ module Ampoule
       CGI::escapeHTML(html)
     end
     
-    def file_contents_for_name(name)
-      path = "_ampoule/#{name}"
+    def file_contents_for_path(path)
       content = nil
       content = File.open(path){|f|f.read}.to_s.strip if File.readable?(path)
       return nil if content == ""
-      content
+      content      
+    end
+    
+    def file_contents_for_name(name)
+      file_contents_for_path("_ampoule/#{name}")
     end
     
     def set_file_contents_for_name(content, name)
@@ -309,6 +314,18 @@ module Ampoule
 
     def set_project_title(new_title)
       set_file_contents_for_name(new_title, "title.txt")
+    end
+
+    def tasks
+      (Dir.glob("_ampoule/*.amp") || []).map do |path|
+        t = Task.new
+        if path =~ %r{/([^/]+)\.amp$}
+          t.initialize_with_raw_file($1, file_contents_for_path(path))
+        else
+          raise "Task id is corrupted? Path: #{path}"
+        end
+        t
+      end
     end
 
     def task_by_id(id)
@@ -331,10 +348,10 @@ module Ampoule
   
   module HTMLBuilder
     def init_html_builder
-      @_html_stack = [""]
+      @_html_stack = []
     end
     def tag(name, attrs = {}, &blk)
-      buf = @_html_stack.last
+      buf = @_html_stack.last || ""
       buf << %{<#{name}}
       if attrs
         rendered_attrs = attrs.inject('') do |ra, (k,v)|
@@ -344,12 +361,13 @@ module Ampoule
       end
       if blk
         @_html_stack.push("")
-        buf << ">" << yield.to_s << "</#{name}>"
-        @_html_stack.pop
+        r = yield
+        r = "" if !r.is_a?(String)
+        buf << ">" << @_html_stack.pop << r << "</#{name}>"
       else
         buf << " />"
       end
-      buf
+      buf if @_html_stack.empty?
     end
     def method_missing(name, *args, &blk)
       tag(name, *args, &blk)
