@@ -215,7 +215,7 @@ module Ampoule
     def read
       super :onload => "document.getElementById('newitemtitle').focus()" do
         form :action => "/title", :method => "POST" do
-          h1 { input(:value => page_title, :name => :title) }
+          h1(:class => 'index-title') { input(:value => page_title, :name => :title) }
         end
 
         form(:action => "/", :method => "POST", :class => 'new-task') do
@@ -256,8 +256,10 @@ module Ampoule
     def read
       super do
         
+        small(:style => %{position:absolute; top:1em;}) { a(:href => "/") { project_title + " index" } }
+        
         form(:action => ".", :method => "POST", :class => 'edit-task') do
-          input(:name => "title", :value => task.title, :class => "task-title")
+          h1 { input(:name => "title", :value => task.title, :class => "task-title") }
           
           # here goes body
           br
@@ -266,12 +268,12 @@ module Ampoule
             text(h("oleg"))
           end
           br
-          textarea(:name => "comment", :rows => 20, :cols => 80) { }
+          textarea(:name => "comment", :rows => 10, :cols => 80) { }
           div :class => "buttons" do
             div :class => "status-buttons" do
-              input :type => :submit, :name => :close, :value => "Close"
+              input :type => :submit, :name => :close, :value => "Close", :disabled => (task.closed? ? :disabled : nil)
               text("&nbsp;")
-              input :type => :submit, :name => :reopen, :value => "Reopen"
+              input :type => :submit, :name => :reopen, :value => "Reopen", :disabled => (task.opened? ? :disabled : nil)
             end
             div :class => "save-button" do
               input :type => :submit, :name => :save, :value => "Save"
@@ -299,9 +301,16 @@ module Ampoule
         :font => font, 
         :color => "#333",
         :margin => "3em 1em 1em 5em")
+        
       apply(:h1, :font_size => 1.3.em) do
-        with(:input,
+        apply(:input,
           :font => font,
+          :width => "70%"
+        )
+      end
+      
+      with("h1.index-title") do
+        apply(:input,
           :border => :none,
           :width => "100%",
           :outline_style => :none
@@ -309,6 +318,10 @@ module Ampoule
       end
       
       apply(:h2, :font_size => 1.1.em, :font_weight => :normal, :margin => "1.8em 0 0.5em 0", :color => "#666") 
+      
+      apply("a", :color => "#333")
+      apply("a:hover", :color => "#000")
+
       
       apply(".new-task input", :font_family => font_family, :font_size => 1.0.em, :margin_left => -3.px, :padding_left => 0.px)
       apply(".empty", :color => "#999")
@@ -331,6 +344,23 @@ module Ampoule
         apply("a:hover", :color => "#333")        
       end
       
+      with(".edit-task") do      
+        apply("textarea",
+          :padding => 0.4.em,
+          :margin => "0.4em 0 0.6em 0",
+          :font_size => 0.9.em,
+          :font_family => font_family,
+          :word_spacing => :normal,
+          :width => "70%"
+        )
+      
+        apply(%{input[type="submit"]}, :font => font) 
+        
+        apply("div.buttons", :position => :relative, :width => "70%", :overflow => :hidden) 
+        apply("div.status-buttons", :float => "left") 
+        apply("div.save-button", :float => "right") 
+        
+      end
     end
   end
   
@@ -444,7 +474,7 @@ module Ampoule
       buf << %{<#{name}}
       if attrs
         rendered_attrs = attrs.inject('') do |ra, (k,v)|
-          ra << " " << k.to_s << "=" << '"' << CGI::escapeHTML(v.to_s) << '"'
+          v ? (ra << " " << k.to_s << "=" << '"' << CGI::escapeHTML(v.to_s) << '"') : ra
         end
         buf << rendered_attrs
       end
