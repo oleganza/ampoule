@@ -230,7 +230,7 @@ module Ampoule
                   onfocus = "if (this.value === #{label.inspect}) {this.value = ''; this.className = ''}"
                   input(:name => "person", :value => label, :id => :newitemperson, :onfocus => onfocus, :class => "empty")
                   text("&nbsp;")
-                  input(:type => :submit, :value => "add")
+                  input(:type => :submit, :value => "Add")
                 end # td
               end # tr
             end # tfoot
@@ -259,8 +259,24 @@ module Ampoule
         form(:action => ".", :method => "POST", :class => 'edit-task') do
           input(:name => "title", :value => task.title, :class => "task-title")
           
+          # here goes body
+          br
           
-          
+          label do
+            text(h("oleg"))
+          end
+          br
+          textarea(:name => "comment", :rows => 20, :cols => 80) { }
+          div :class => "buttons" do
+            div :class => "status-buttons" do
+              input :type => :submit, :name => :close, :value => "Close"
+              text("&nbsp;")
+              input :type => :submit, :name => :reopen, :value => "Reopen"
+            end
+            div :class => "save-button" do
+              input :type => :submit, :name => :save, :value => "Save"
+            end
+          end
         end
         
       end
