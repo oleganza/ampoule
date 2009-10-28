@@ -179,28 +179,38 @@ module Ampoule
           form :action => "/title", :method => "POST" do
             h1 { input(:value => page_title, :name => :title) }
           end
-          
-          if !opened_tasks.empty?
-            table(:border => 0, :class => "tasks") do
-              opened_tasks.each do |task|
-                tr do
-                  td(:class => "task-title") do
-                    a(:href => "/#{task.id}"){ h(task.title) }
+
+          form(:action => "/", :method => "POST", :class => 'new-task') do          
+            if !opened_tasks.empty?
+              table(:border => 0, :class => "tasks") do
+                opened_tasks.each do |task|
+                  tr do
+                    td(:class => "task-title") do
+                      a(:href => "/#{task.id}"){ h(task.title) }
+                    end
+                    td(:class => "task-person") do
+                      h(task.person)
+                    end
+                    td(:class => "task-status #{task.status}") do
+                      h(task.status)
+                    end
                   end
-                  td(:class => "task-person") do
-                    h(task.person)
+                end # tasks.each
+              
+                tfoot do
+                  td :class => "task-title" do
+                    input(:name => "title", :value => "", :id => :newitemtitle)
                   end
-                  td(:class => "task-status #{task.status}") do
-                    h(task.status)
+                  td :class => "task-person", :colspan => 2 do
+                    label = 'person'
+                    onfocus = "if (this.value === #{label.inspect}) {this.value = ''; this.className = ''}"
+                    input(:name => "title", :value => label, :id => :newitemperson, :onfocus => onfocus, :class => "empty")
                   end
                 end
-              end
-            end
-          end
-          
-          form(:action => "/", :method => "POST", :class => 'new-task') do
-            input(:name => "title", :value => "", :id => :newitem)
-          end
+              
+              end # table
+            end # if not empty
+          end # new task form
           
         end
       end
@@ -217,6 +227,41 @@ module Ampoule
     
     def read
       
+    end
+  end
+  
+  #
+  # CSS
+  #
+  
+  class CSS
+    include CSSBuilder
+    def initialize
+      init_css_builder
+    end
+    def run
+      app_font = "1em Helvetica, sans-serif"
+      apply(:body, 
+        :font => app_font, 
+        :color => "#333",
+        :margin => "3em 1em 1em 5em")
+      apply(:h1, :font_size => 1.3.em) do
+        with(:input,
+          :font => app_font,
+          :border => :none,
+          :width => "100%",
+          :outline_style => :none
+        )
+      end
+      apply(".new-task input", :font => app_font, :font_size => 1.em, :margin_left => -3.px, :padding_left => 0.px)
+      apply(".empty", :color => "#999")
+      apply(".tasks", :width=>"100%") do
+        apply("tfoot td", :padding_top=>"0.5em")
+      end
+      
+      apply(".task-title", :width=>"60%", :padding_right => "5px") do
+        apply("input", :width=>"100%")
+      end
     end
   end
   
@@ -247,37 +292,6 @@ module Ampoule
       task.title = title
       save_task(task)
       "/"
-    end
-  end
-  
-  
-  #
-  # CSS
-  #
-  
-  class CSS
-    include CSSBuilder
-    def initialize
-      init_css_builder
-    end
-    def run
-      app_font = "1em Helvetica, sans-serif"
-      apply(:body, 
-        :font => app_font, 
-        :color => "#333",
-        :margin => "3em 1em 1em 5em")
-      apply(:h1, :font_size => 1.3.em) do
-        with(:input,
-          :font => app_font,
-          :border => :none,
-          :width => "100%",
-          :outline_style => :none
-        )
-      end
-      
-      with(".new-task") do
-        apply(:input, :font => app_font, :width => "60%")
-      end
     end
   end
   
