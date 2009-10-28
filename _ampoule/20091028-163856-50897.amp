@@ -9,14 +9,13 @@ Modified: Wed Oct 28 16:51:50 +0100 2009
 @author Oleg Andreev
 @date Wed Oct 28 16:42:37 +0100 2009
 
-!
+In the text, we said things such as “and evaluates to true if both operands are true.” But it’s actually slightly more subtle than that. The operators and, or, && and || actually return the first of their arguments that determine the truth or falsity of the condition. Sounds grand. What does it mean?
 
 @comment
 @author Oleg Andreev
 @date Wed Oct 28 16:42:59 +0100 2009
 
-voila!
-Aga.
+Take the expression “val1 and val2”. If val1 is either false or nil, then we know the expression cannot be true. In this case, the value of val1 determines the overall value of the expression, so it is the value returned. If val1 has some other value, then the overall value of the expression depends on val2, so its value is returned.
 
 @comment
 @author Oleg Andreev

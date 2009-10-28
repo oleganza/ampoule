@@ -266,7 +266,7 @@ module Ampoule
                 td :class => "task-person" do
                   label = 'nobody'
                   onfocus = "if (this.value === #{label.inspect}) {this.value = ''; this.className = ''}"
-                  input(:name => "person", :value => ($last_assigned_person || label), :id => :newitemperson, :onfocus => onfocus, :class => ($last_assigned_person ? "" : "empty"))
+                  input(:name => "person", :value => ($last_assigned_person || label), :id => :newitemperson, :onfocus => onfocus, :class => ($last_assigned_person && $last_assigned_person != label ? "" : "empty"))
                   text("&nbsp;")
                   input(:type => :submit, :value => "Add")
                 end # td
