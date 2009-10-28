@@ -41,7 +41,94 @@ module Ampoule
   
   VERSION = "0.1" if !defined? Ampoule::VERSION
   
-  module FileHelper; end
+  module GitHelper
+    def git_user_name
+      @git_user_name ||= `git config user.name`.strip
+    end
+    
+    def git_user_email
+      @git_user_email ||= `git config user.email`.strip
+    end
+    
+    def git_user_name=(n)
+      n = n.gsub(/["`'\\\n\r\t\v]+/, '')
+      `git config user.name "#{n}"`
+    end
+  end
+  
+  module FileHelper
+    include GitHelper
+    
+    def h(html)
+      CGI::escapeHTML(html)
+    end
+    
+    def file_contents_for_path(path)
+      content = nil
+      content = $file_buffer.read(path).to_s.strip
+      return nil if content == ""
+      content
+    end
+    
+    def file_contents_for_name(name)
+      file_contents_for_path("_ampoule/#{name}")
+    end
+    
+    def set_file_contents_for_name(content, name)
+      path = "_ampoule/#{name}"
+      Dir.mkdir("_ampoule") if !File.exists?("_ampoule")
+      
+      $file_buffer.write(path, content)
+    end
+    
+    def project_title
+      (file_contents_for_name("title.txt") || "Click here to change project name").strip
+    end
+
+    def set_project_title(new_title)
+      set_file_contents_for_name(new_title, "title.txt")
+    end
+
+    def tasks
+      $file_buffer.glob("_ampoule/*.amp").map do |path|
+        t = Task.new
+        if path =~ %r{/([^/]+)\.amp$}
+          t.initialize_with_raw_file($1, file_contents_for_path(path))
+        else
+          raise "Task id is corrupted? Path: #{path}"
+        end
+        t
+      end
+    end
+
+    def task_by_id(id)
+      raw_contents = file_contents_for_name(%{#{id}.amp})
+      return nil if !raw_contents
+      t = Task.new
+      t.initialize_with_raw_file(id, raw_contents)
+      t
+    end
+        
+    def save_task(task)
+      task.mark_as_modified
+      raw_contents = task.to_raw_file
+      set_file_contents_for_name(raw_contents, %{#{task.id}.amp})
+    end
+    
+    def current_user_name=(n)
+      self.git_user_name = n
+    end
+    
+    def current_user_name
+      n = git_user_name
+      n = git_user_email if n.to_s == ''
+      n = "Anonymous"    if n.to_s == ''
+      n
+    end
+    
+  end
+  
+
   module HTMLBuilder; end
   module CSSBuilder; end
 
@@ -547,94 +634,7 @@ module Ampoule
   
   #
   # Helpers
-  #
-  
-  module GitHelper
-    def git_user_name
-      @git_user_name ||= `git config user.name`.strip
-    end
-    
-    def git_user_email
-      @git_user_email ||= `git config user.email`.strip
-    end
-    
-    def git_user_name=(n)
-      n = n.gsub(/["`'\\\n\r\t\v]+/, '')
-      `git config user.name "#{n}"`
-    end
-  end
-  
-  module FileHelper
-    include GitHelper
-    
-    def h(html)
-      CGI::escapeHTML(html)
-    end
-    
-    def file_contents_for_path(path)
-      content = nil
-      content = $file_buffer.read(path).to_s.strip
-      return nil if content == ""
-      content
-    end
-    
-    def file_contents_for_name(name)
-      file_contents_for_path("_ampoule/#{name}")
-    end
-    
-    def set_file_contents_for_name(content, name)
-      path = "_ampoule/#{name}"
-      Dir.mkdir("_ampoule") if !File.exists?("_ampoule")
-      
-      $file_buffer.write(path, content)
-    end
-    
-    def project_title
-      (file_contents_for_name("title.txt") || "Click here to change project name").strip
-    end
-
-    def set_project_title(new_title)
-      set_file_contents_for_name(new_title, "title.txt")
-    end
-
-    def tasks
-      $file_buffer.glob("_ampoule/*.amp").map do |path|
-        t = Task.new
-        if path =~ %r{/([^/]+)\.amp$}
-          t.initialize_with_raw_file($1, file_contents_for_path(path))
-        else
-          raise "Task id is corrupted? Path: #{path}"
-        end
-        t
-      end
-    end
-
-    def task_by_id(id)
-      raw_contents = file_contents_for_name(%{#{id}.amp})
-      return nil if !raw_contents
-      t = Task.new
-      t.initialize_with_raw_file(id, raw_contents)
-      t
-    end
-        
-    def save_task(task)
-      task.mark_as_modified
-      raw_contents = task.to_raw_file
-      set_file_contents_for_name(raw_contents, %{#{task.id}.amp})
-    end
-    
-    def current_user_name=(n)
-      self.git_user_name = n
-    end
-    
-    def current_user_name
-      n = git_user_name
-      n = git_user_email if n.to_s == ''
-      n = "Anonymous"    if n.to_s == ''
-      n
-    end
-    
-  end
+  #  
   
   require 'thread'
   class FileSyncBuffer
