@@ -182,8 +182,8 @@ module Ampoule
   
   class Index < Layout
     attr_accessor :opened_tasks, :closed_tasks
-    def initialize
-      super
+    def initialize(query)
+      super()
       @opened_tasks = []
       @closed_tasks = []
       tasks.each do |t|
@@ -228,7 +228,7 @@ module Ampoule
                 td :class => "task-person" do
                   label = 'person'
                   onfocus = "if (this.value === #{label.inspect}) {this.value = ''; this.className = ''}"
-                  input(:name => "person", :value => label, :id => :newitemperson, :onfocus => onfocus, :class => "empty")
+                  input(:name => "person", :value => ($last_assigned_person || label), :id => :newitemperson, :onfocus => onfocus, :class => ($last_assigned_person ? "" : "empty"))
                   text("&nbsp;")
                   input(:type => :submit, :value => "Add")
                 end # td
@@ -254,7 +254,7 @@ module Ampoule
     end
     
     def read
-      super do
+      super :onload => "document.getElementById('comment').focus()" do
         
         small(:style => %{position:absolute; top:1em;}) { a(:href => "/") { project_title + " index" } }
         
@@ -269,7 +269,7 @@ module Ampoule
           end
           br
           
-          textarea(:name => "comment", :rows => 10, :cols => 80) { }
+          textarea(:name => "comment", :id => "comment", :rows => 10, :cols => 80) { }
           
           div :class => "panel" do
             div :class => "assign-to" do
@@ -279,13 +279,13 @@ module Ampoule
           end
           
           div :class => "buttons panel" do
+            div :class => "save-button" do
+              input :type => :submit, :name => :save, :value => "Save"
+            end
             div :class => "status-buttons" do
               input :type => :submit, :name => :close, :value => "Close", :disabled => (task.closed? ? :disabled : nil)
               text("&nbsp;")
               input :type => :submit, :name => :reopen, :value => "Reopen", :disabled => (task.opened? ? :disabled : nil)
-            end
-            div :class => "save-button" do
-              input :type => :submit, :name => :save, :value => "Save"
             end
           end
         end
@@ -350,7 +350,7 @@ module Ampoule
       apply(".tasks.closed-tasks") do
         apply("td", :color => "#666")
         apply("a", :color => "#666")
-        apply("a:hover", :color => "#333")        
+        apply("a:hover", :color => "#333")
       end
       
       with(".edit-task") do      
@@ -407,7 +407,33 @@ module Ampoule
       task.title = title
       task.person = person
       save_task(task)
+      $last_assigned_person = person
       "/"
+    end
+  end
+  
+  class TaskUpdate
+    include FileHelper
+    def initialize(id, query)
+      @task = task_by_id(id)
+      @query = query
+    end
+    def perform
+      title = @query["title"].first.to_s
+      person = @query["person"].first.to_s
+      
+      @task.title = title
+      @task.person = person
+      
+      @task.close if !@query["close"].empty?
+      @task.open  if !@query["reopen"].empty?
+      
+      save_task(@task)
+      if @query["close"].empty? && @query["reopen"].empty?
+        "/#{@task.id}"
+      else
+        "/" # redirect to index if status was changed
+      end
     end
   end
   
@@ -467,6 +493,7 @@ module Ampoule
     end
         
     def save_task(task)
+      task.mark_as_modified
       raw_contents = task.to_raw_file
       set_file_contents_for_name(raw_contents, %{#{task.id}.amp})
     end
@@ -576,7 +603,7 @@ module Ampoule
       load(__FILE__) if ENV['AMPOULE_AUTORELOAD']
       content_type = "text/html"
       if request.path == "/"
-        body = Index.new.read
+        body = Index.new(request.query).read
       elsif request.path == "/style.css"
         body = CSS.new.read
         content_type = "text/css"
@@ -599,7 +626,7 @@ module Ampoule
       elsif request.path == "/"
         location = TaskCreate.new(CGI::parse(request.body)).perform
       else
-        location = TaskUpdate.new(request.path.to_s[1..-1]).perform
+        location = TaskUpdate.new(request.path.to_s[1..-1], CGI::parse(request.body)).perform
       end
       response.status = 301
       response['Location'] = location
