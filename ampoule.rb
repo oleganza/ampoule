@@ -591,7 +591,7 @@ module Ampoule
     end
 
     def tasks
-      (Dir.glob("_ampoule/*.amp") || []).map do |path|
+      $file_buffer.glob("_ampoule/*.amp").map do |path|
         t = Task.new
         if path =~ %r{/([^/]+)\.amp$}
           t.initialize_with_raw_file($1, file_contents_for_path(path))
@@ -663,7 +663,7 @@ module Ampoule
               @buffer = {}
             end
           
-            `git add .; git commit -m "synced #{paths.join(', ')}"; git push`
+            `git add _ampoule; git commit -m "synced #{paths.join(', ')}"; git push`
             
           end
         end
@@ -687,6 +687,12 @@ module Ampoule
         @buffer[path] = data
       end
       @queue.push(:push)
+    end
+    
+    def glob(wildcard)
+      @mutex.synchronize do
+        (Dir.glob(wildcard) || []) | @buffer.keys.grep(Regexp.new(wildcard.gsub(".","\\.").gsub("*",".*")))
+      end
     end
   end
   
