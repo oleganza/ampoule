@@ -1,13 +1,13 @@
-Title: new task
+Title: formatting task
 Person: nobody
 Status: opened
 Created: Sat Oct 28 00:00:00 +0200 2000
-Modified: Wed Oct 28 17:15:01 +0100 2009
+Modified: Wed Oct 28 17:28:50 +0100 2009
 
 
 @comment
 @author Oleg Andreev
-@date Wed Oct 28 16:42:37 +0100 2009
+@date Oct 27 16:42:37 +0100 2009
 
 In the text, we said things such as “and evaluates to true if both operands are true.” But it’s actually slightly more subtle than that. The operators and, or, && and || actually return the first of their arguments that determine the truth or falsity of the condition. Sounds grand. What does it mean?
 
@@ -85,3 +85,4 @@ Don't you think?
 2. Two 
 3. Three 
 4. Four
+

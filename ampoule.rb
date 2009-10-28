@@ -303,7 +303,7 @@ module Ampoule
             task.comments.each do |comment|
               label :class => "comment-label" do
                 text(h(comment.person))
-                small { comment.date.to_s }
+                small { comment.date.to_relative_string }
               end
               text(formatted_text(comment.body))
             end
@@ -351,6 +351,21 @@ module Ampoule
     end
     
   end # Page
+  
+  class ::Time
+    def to_relative_string
+      diff = (Time.now - self).to_i
+      return "now" if diff < 2
+      return "#{diff} seconds ago" if diff < 50
+      return "one minute ago" if diff < 60*2
+      return "#{diff/60} minutes ago" if diff < 60*60
+      return "#{diff/60/60} hours ago" if diff < 60*60*18
+      return "yesterday" if diff/60/60/24 <= 1
+      return "#{diff/60/60/24} days ago" if diff < 60*60*24*7
+      return strftime("%B %d") if diff < 60*60*24*30*3
+      return strftime("%B %d, %Y")
+    end
+  end
   
   #
   # CSS
@@ -775,6 +790,6 @@ can imagine.
 
 2. Items are stored under unique filenames:
 
-  _ampoule_tasks/2009-10-27-18.15.45.463129.amp
+  _ampoule_tasks/20091027-181545-463129.amp
 
 
