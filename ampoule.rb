@@ -29,12 +29,6 @@
 
 
 #  TODO:
-# - implement minimal ui so that i can put the rest of this list under ampoule
-#   V webrick setup
-#   - show items list on GET /
-#   - show single item on GET /id
-#   V add item on POST /
-#   - edit item on POST /id
 # - push/pull automatically
 # - search index
 # - browse per-page history
