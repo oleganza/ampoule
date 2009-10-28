@@ -156,15 +156,34 @@ module Ampoule
   # GET
   #
   
-  class Index
+  class Layout
     include FileHelper
     include HTMLBuilder
-    
-    attr_accessor :page_title, :opened_tasks, :closed_tasks
+    attr_accessor :page_title
     def initialize
       super
       init_html_builder
       @page_title = project_title
+    end
+    
+    def read(attrs_for_body = {})
+      html do
+        head do
+          meta "http-equiv" => "Content-Type", :content => "text/html; charset=UTF-8"
+          link :rel => "stylesheet", :href=>"/style.css", :type => "text/css"
+          title { page_title }
+        end
+        body(attrs_for_body) do
+          yield if block_given?
+        end
+      end # html
+    end # read
+  end # Layout
+  
+  class Index < Layout
+    attr_accessor :opened_tasks, :closed_tasks
+    def initialize
+      super
       @opened_tasks = []
       @closed_tasks = []
       tasks.each do |t|
@@ -194,55 +213,50 @@ module Ampoule
     end
     
     def read
-      html do
-        head do
-          meta "http-equiv" => "Content-Type", :content => "text/html; charset=UTF-8"
-          link :rel => "stylesheet", :href=>"/style.css", :type => "text/css"
-          title { page_title }
+      super :onload => "document.getElementById('newitemtitle').focus()" do
+        form :action => "/title", :method => "POST" do
+          h1 { input(:value => page_title, :name => :title) }
         end
-        body :onload => "document.getElementById('newitemtitle').focus()" do
-          form :action => "/title", :method => "POST" do
-            h1 { input(:value => page_title, :name => :title) }
-          end
 
-          form(:action => "/", :method => "POST", :class => 'new-task') do
-            tasks_table(opened_tasks, :class => "opened-tasks") do
-              tfoot do
-                tr do
-                  td :class => "task-title" do
-                    input(:name => "title", :value => "", :id => :newitemtitle)
-                  end
-                  td :class => "task-person" do
-                    label = 'person'
-                    onfocus = "if (this.value === #{label.inspect}) {this.value = ''; this.className = ''}"
-                    input(:name => "person", :value => label, :id => :newitemperson, :onfocus => onfocus, :class => "empty")
-                    text("&nbsp;")
-                    input(:type => :submit, :value => "add")
-                  end # td
-                end # tr
-              end # tfoot
-            end # tasks_table
-          end # new task form
-          
-          h2 { "Closed tasks" }
-          
-          tasks_table(closed_tasks, :class => "closed-tasks")
-          
-        end
-      end
-    end
+        form(:action => "/", :method => "POST", :class => 'new-task') do
+          tasks_table(opened_tasks, :class => "opened-tasks") do
+            tfoot do
+              tr do
+                td :class => "task-title" do
+                  input(:name => "title", :value => "", :id => :newitemtitle)
+                end
+                td :class => "task-person" do
+                  label = 'person'
+                  onfocus = "if (this.value === #{label.inspect}) {this.value = ''; this.className = ''}"
+                  input(:name => "person", :value => label, :id => :newitemperson, :onfocus => onfocus, :class => "empty")
+                  text("&nbsp;")
+                  input(:type => :submit, :value => "add")
+                end # td
+              end # tr
+            end # tfoot
+          end # tasks_table
+        end # new task form
+        
+        h2 { "Closed tasks" }
+        
+        tasks_table(closed_tasks, :class => "closed-tasks")
+        
+      end # layout
+    end # read
   end
   
-  class Page
-    include FileHelper
-    include HTMLBuilder
-    
+  class Page < Layout
+    attr_accessor :task
     def initialize(id)
-      init_html_builder
+      super()
+      @task = task_by_id(id)
+      self.page_title = @task.title
     end
     
     def read
-      
+      super do
+        
+      end
     end
   end
   
@@ -377,10 +391,10 @@ module Ampoule
     end
 
     def task_by_id(id)
-      raw_contents = file_contents_for_name(id)
+      raw_contents = file_contents_for_name(%{#{id}.amp})
       return nil if !raw_contents
       t = Task.new
-      t.initialize_with_raw_file(raw_contents)
+      t.initialize_with_raw_file(id, raw_contents)
       t
     end
         
@@ -498,6 +512,9 @@ module Ampoule
       elsif request.path == "/style.css"
         body = CSS.new.read
         content_type = "text/css"
+      elsif request.path == "/favicon.ico"
+        body = ""
+        content_type = "application/octet-stream"
       else
         body = Page.new(request.path.to_s[1..-1]).read
       end
