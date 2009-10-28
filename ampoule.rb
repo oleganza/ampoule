@@ -299,13 +299,14 @@ module Ampoule
         form(:action => "/#{task.id}", :method => "POST", :class => 'edit-task') do
           h1 { input(:name => "title", :value => task.title, :class => "task-title") }
           
-          task.comments.each do |comment|
-            label :class => "comment-label" do
-              text(h(comment.person))
-              small { comment.date.to_s }
+          div :class => "comments" do
+            task.comments.each do |comment|
+              label :class => "comment-label" do
+                text(h(comment.person))
+                small { comment.date.to_s }
+              end
+              tag("p") { h(comment.body) }
             end
-            br
-            tag("p") { h(comment.body) }
           end
           
           br
@@ -427,8 +428,15 @@ module Ampoule
         
         apply("div.status-buttons", :float => "left") 
         apply("div.save-button", :float => "right") 
-        
       end
+      
+      with(".comments") do
+        apply("label", :font_size => 0.9.em, :color => "black", :display => "block", :margin => "1.6em 0 0.6em 0") do
+          apply("small", :font_size => 0.8.em, :color => "#666", :padding_left => 0.9.em)
+        end
+        apply("p", :font_size => 0.9.em, :margin => "0.3em 0 0.6em 0", :width => "70%", :line_height => "130%")
+      end
+      
     end
   end
   
