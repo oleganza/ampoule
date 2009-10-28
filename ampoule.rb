@@ -160,12 +160,36 @@ module Ampoule
     include FileHelper
     include HTMLBuilder
     
-    attr_accessor :page_title, :opened_tasks
+    attr_accessor :page_title, :opened_tasks, :closed_tasks
     def initialize
       super
       init_html_builder
       @page_title = project_title
-      @opened_tasks = tasks
+      @opened_tasks = []
+      @closed_tasks = []
+      tasks.each do |t|
+        (t.closed? ? @closed_tasks : @opened_tasks) << t
+      end
+    end
+    
+    def tasks_table(tasks, opts = {}, &blk)
+      opts = opts.dup
+      cls = ["tasks", opts.delete(:class), opts.delete("class")].compact.join(" ")
+      table({:border => 0, :class => cls}.merge(opts)) do
+        tasks.each do |task|
+          tr do
+            td(:class => "task-title") do
+              a(:href => "/#{task.id}"){ h(task.title) }
+            end
+            td(:class => "task-person") do
+              h(task.person)
+            end
+          end
+        end # tasks.each
+        
+        yield if block_given?
+        
+      end # table
     end
     
     def read
@@ -180,37 +204,26 @@ module Ampoule
             h1 { input(:value => page_title, :name => :title) }
           end
 
-          form(:action => "/", :method => "POST", :class => 'new-task') do          
-            if !opened_tasks.empty?
-              table(:border => 0, :class => "tasks") do
-                opened_tasks.each do |task|
-                  tr do
-                    td(:class => "task-title") do
-                      a(:href => "/#{task.id}"){ h(task.title) }
-                    end
-                    td(:class => "task-person") do
-                      h(task.person)
-                    end
-                    td(:class => "task-status #{task.status}") do
-                      h(task.status)
-                    end
-                  end
-                end # tasks.each
-              
-                tfoot do
-                  td :class => "task-title" do
-                    input(:name => "title", :value => "", :id => :newitemtitle)
-                  end
-                  td :class => "task-person", :colspan => 2 do
-                    label = 'person'
-                    onfocus = "if (this.value === #{label.inspect}) {this.value = ''; this.className = ''}"
-                    input(:name => "title", :value => label, :id => :newitemperson, :onfocus => onfocus, :class => "empty")
-                  end
+          form(:action => "/", :method => "POST", :class => 'new-task') do
+            tasks_table(opened_tasks, :class => "opened-tasks") do
+              tfoot do
+                td :class => "task-title" do
+                  input(:name => "title", :value => "", :id => :newitemtitle)
                 end
-              
-              end # table
-            end # if not empty
+                td :class => "task-person" do
+                  label = 'person'
+                  onfocus = "if (this.value === #{label.inspect}) {this.value = ''; this.className = ''}"
+                  input(:name => "title", :value => label, :id => :newitemperson, :onfocus => onfocus, :class => "empty")
+                  text("&nbsp;")
+                  input(:type => :submit, :value => "add")
+                end
+              end              
+            end # tasks_table
           end # new task form
+          
+          h2 { "Closed tasks" }
+          
+          tasks_table(closed_tasks, :class => "closed-tasks")
           
         end
       end
@@ -254,19 +267,23 @@ module Ampoule
           :outline_style => :none
         )
       end
+      
+      apply(:h2, :font_size => 1.1.em, :font_weight => :normal, :margin => "1.8em 0 0.5em 0") 
+      
       apply(".new-task input", :font_family => font_family, :font_size => 1.0.em, :margin_left => -3.px, :padding_left => 0.px)
       apply(".empty", :color => "#999")
-      apply(".tasks", :width=>"100%") do
-        apply("td", :font_family => font_family, :font_size => 0.9.em)
+      apply(".tasks", :width=>"100%", :margin_left => "-1px") do
+        apply("td", :font_family => font_family, :font_size => 0.9.em, :padding => "0.1em 0 0.1em 0")
         apply("td.task-person", :font_size => 0.83.em)
-        apply("td.task-status", :font_size => 0.83.em)
         apply("tfoot td", :padding_top=>"0.5em")
+        
+        apply("a", :color => "#333", :text_decoration => "none")
+        apply("a:hover", :color => "#000", :text_decoration => "underline")
+        
+        apply(".task-title", :width=>"70%", :padding_right => "5px") do
+          apply("input", :width=>"100%")
+        end
       end
-      apply(".task-title", :width=>"60%", :padding_right => "5px") do
-        apply("input", :width=>"100%")
-      end
-      apply("a", :color => "#333", :text_decoration => "none")
-      apply("a:hover", :color => "#000", :text_decoration => "underline")
     end
   end
   
@@ -368,6 +385,10 @@ module Ampoule
   module HTMLBuilder
     def init_html_builder
       @_html_stack = []
+    end
+    def text(text)
+      buf = (@_html_stack.last || "") << text
+      buf if @_html_stack.empty?
     end
     def tag(name, attrs = {}, &blk)
       buf = @_html_stack.last || ""
