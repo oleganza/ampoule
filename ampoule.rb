@@ -110,11 +110,11 @@ module Ampoule
     end
     
     def created_at
-      Time.parse(@headers["Created"]) || Time.now
+      @headers["Created"] && Time.parse(@headers["Created"]) || Time.now
     end
     
     def modified_at
-      @modified_at ||= Time.parse(@headers["Modified"]) || Time.now
+      @modified_at ||= (@headers["Modified"] && Time.parse(@headers["Modified"]) || Time.now)
     end
     
     # mutation methods
@@ -321,7 +321,7 @@ module Ampoule
         
     def save_task(task)
       raw_contents = task.to_raw_file
-      set_file_contents_for_name(task.id, raw_contents)
+      set_file_contents_for_name(raw_contents, %{#{task.id}.amp})
     end
   end
   
