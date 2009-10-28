@@ -635,26 +635,37 @@ module Ampoule
       @buffer = {} # path => content
       @queue = Queue.new
       @mutex = Mutex.new
-      @syncer = Thread.new do
+      
+      @puller = Thread.new do
+        loop do
+          sleep(1 + rand(1))
+          @queue.push(:pull)
+        end
+      end
+      
+      @pusher = Thread.new do
         while msg = @queue.pop
           if msg == :stop
             puts "Ampoule::FileSyncBuffer: stopped."
             break
           end
-          
+
           `git pull`
           
-          paths = []
-          @mutex.synchronize do
-            @buffer.each do |path, data|
-              paths << path
-              File.open(path, 'w'){|f|f.write(data)}
+          if msg == :push
+                      
+            paths = []
+            @mutex.synchronize do
+              @buffer.each do |path, data|
+                paths << path
+                File.open(path, 'w'){|f|f.write(data)}
+              end
+              @buffer = {}
             end
-            @buffer = {}
+          
+            `git add .; git commit -m "synced #{paths.join(', ')}"; git push`
+            
           end
-          
-          `git add .; git commit -m "updated #{paths.join(', ')}"; git push`
-          
         end
       end
     end
@@ -662,7 +673,7 @@ module Ampoule
     def stop
       puts "Ampoule::FileSyncBuffer: stopping..."
       @queue.push :stop
-      @syncer.join
+      @pusher.join
     end
     
     def read(path)
@@ -675,7 +686,7 @@ module Ampoule
       @mutex.synchronize do
         @buffer[path] = data
       end
-      @queue.push(:sync)
+      @queue.push(:push)
     end
   end
   
