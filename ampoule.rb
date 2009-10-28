@@ -170,6 +170,7 @@ module Ampoule
       tasks.each do |t|
         (t.closed? ? @closed_tasks : @opened_tasks) << t
       end
+      @closed_tasks.reverse!
     end
     
     def tasks_table(tasks, opts = {}, &blk)
@@ -270,7 +271,7 @@ module Ampoule
         )
       end
       
-      apply(:h2, :font_size => 1.1.em, :font_weight => :normal, :margin => "1.8em 0 0.5em 0") 
+      apply(:h2, :font_size => 1.1.em, :font_weight => :normal, :margin => "1.8em 0 0.5em 0", :color => "#666") 
       
       apply(".new-task input", :font_family => font_family, :font_size => 1.0.em, :margin_left => -3.px, :padding_left => 0.px)
       apply(".empty", :color => "#999")
@@ -286,6 +287,13 @@ module Ampoule
           apply("input", :width=>"100%")
         end
       end
+      
+      apply(".tasks.closed-tasks") do
+        apply("td", :color => "#666")
+        apply("a", :color => "#666")
+        apply("a:hover", :color => "#333")        
+      end
+      
     end
   end
   
