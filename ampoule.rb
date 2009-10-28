@@ -32,7 +32,7 @@ require 'CGI'
 
 module Ampoule
   
-  VERSION = "0.1"
+  VERSION = "0.1" if !defined? Ampoule::VERSION
   
   module FileHelper; end
   module HTMLBuilder; end
@@ -578,7 +578,9 @@ module Ampoule
     def set_file_contents_for_name(content, name)
       path = "_ampoule/#{name}"
       Dir.mkdir("_ampoule") if !File.exists?("_ampoule")
+      `git pull`
       File.open(path, 'w'){|f|f.write(content)}
+      `git add .; git commit -m "updated #{name}"; git push`
     end
     
     def project_title
