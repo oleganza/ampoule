@@ -4,7 +4,7 @@
 # ABOUT
 #
 # Ampoule is a simple distributed bugtracker based on git.
-# For each project you should setup a separate git repository and run ./ampoule.rb to get access to the UI
+# For each project you should setup a separate git repository and run ./ampoule to get access to the UI
 # You may open and close tasks, assign them to someone and add comments.
 # Data is automatically synchronized with the remote repository.
 #
@@ -64,10 +64,7 @@ module Ampoule
     end
     
     def file_contents_for_path(path)
-      content = nil
-      content = $file_buffer.read(path).to_s.strip
-      return nil if content == ""
-      content
+      $file_buffer.read(path).to_s.or { nil }
     end
     
     def file_contents_for_name(name)
@@ -102,11 +99,9 @@ module Ampoule
     end
 
     def task_by_id(id)
-      raw_contents = file_contents_for_name(%{#{id}.amp})
-      return nil if !raw_contents
-      t = Task.new
-      t.initialize_with_raw_file(id, raw_contents)
-      t
+      file_contents_for_name(%{#{id}.amp}).and do |raw_contents|
+        Task.new.with_raw_file(id, raw_contents)
+      end
     end
         
     def save_task(task)
@@ -120,15 +115,11 @@ module Ampoule
     end
     
     def current_user_name
-      n = git_user_name
-      n = git_user_email if n.to_s == ''
-      n = "Anonymous"    if n.to_s == ''
-      n
+      git_user_name.or{git_user_email}.or{"Anonymous"} 
     end
     
   end
   
-
   module HTMLBuilder; end
   module CSSBuilder; end
 
@@ -147,6 +138,11 @@ module Ampoule
     def initialize
       @headers = {}
       @body = ""
+    end
+    
+    def with_raw_file(*args)
+      initialize_with_raw_file(*args)
+      self
     end
     
     def initialize_with_raw_file(id, raw_file)
@@ -175,15 +171,15 @@ module Ampoule
     end
     
     def title
-      @headers["Title"] || "Untitled"
+      @headers["Title"].or "Untitled"
     end
     
     def person
-      @headers["Person"] || "nobody"
+      @headers["Person"].or "nobody"
     end
     
     def status
-      @headers["Status"] || OPENED
+      @headers["Status"].or OPENED
     end
     
     def closed?
@@ -195,11 +191,11 @@ module Ampoule
     end
     
     def created_at
-      @headers["Created"] && Time.parse(@headers["Created"]) || Time.now
+      @headers["Created"].and {|c| Time.parse(c) }.or { Time.now }
     end
     
     def modified_at
-      @modified_at ||= (@headers["Modified"] && Time.parse(@headers["Modified"]) || Time.now)
+      @modified_at ||= @headers["Modified"].and {|c| Time.parse(c) }.or { Time.now }
     end
     
     def comments
@@ -293,6 +289,7 @@ module Ampoule
           link :rel => "stylesheet", :href=>"/style.css", :type => "text/css"
           title { page_title }
         end
+        attrs_for_body[:onload] = %{document.getElementById('#{domid}').focus()} if domid = attrs_for_body.delete(:focus)
         body(attrs_for_body) do
           yield if block_given?
         end
@@ -334,12 +331,12 @@ module Ampoule
     end
     
     def read
-      super :onload => "document.getElementById('newitemtitle').focus()" do
+      super :focus => :newitemtitle do
         form :action => "/title", :method => "POST" do
           h1(:class => 'index-title') { input(:value => page_title, :name => :title) }
         end
         
-        form(:action => "/", :method => "POST", :class => 'new-task') do
+        form(:action => "/", :method => :POST, :class => 'new-task') do
           tasks_table(opened_tasks, :class => "opened-tasks") do
             tfoot do
               tr do
@@ -348,8 +345,14 @@ module Ampoule
                 end
                 td :class => "task-person" do
                   label = 'nobody'
+                  value = $last_assigned_person || label
+                  styleclass = (value != label ? "" : "empty")
                   onfocus = "if (this.value === #{label.inspect}) {this.value = ''; this.className = ''}"
-                  input(:name => "person", :value => ($last_assigned_person || label), :id => :newitemperson, :onfocus => onfocus, :class => ($last_assigned_person && $last_assigned_person != label ? "" : "empty"))
+                  input(:name    => :person, 
+                        :value   => value, 
+                        :id      => :newitemperson, 
+                        :onfocus => onfocus, 
+                        :class => styleclass)
                   text("&nbsp;")
                   input(:type => :submit, :value => "Add")
                 end # td
@@ -375,12 +378,12 @@ module Ampoule
     end
     
     def read
-      super :onload => "document.getElementById('comment').focus()" do
+      super :focus => :comment do
         
         small(:style => %{position:absolute; top:1em;}) { a(:href => "/") { project_title + " index" } }
         
-        form(:action => "/#{task.id}", :method => "POST", :class => 'edit-task') do
-          h1 { input(:name => "title", :value => task.title, :class => "task-title") }
+        form(:action => "/#{task.id}", :method => :POST, :class => 'edit-task') do
+          h1 { input(:name => :title, :value => task.title, :class => "task-title") }
           
           div :class => "comments" do
             task.comments.each do |comment|
@@ -392,9 +395,13 @@ module Ampoule
             end
           end
           br
-          input :class => "current-person", :name => "current_person", :value => current_user_name, :tabindex=>"-1"
+          input :class => "current-person", 
+                :name => 
+                :current_person, 
+                :value => current_user_name, 
+                :tabindex => -1
           br
-          textarea(:name => "comment", :id => "comment", :rows => 10, :cols => 80) { }
+          textarea(:name => :comment, :id => :comment, :rows => 10, :cols => 80) { }
           div :class => "panel" do
             div :class => "assign-to" do
               text("assigned to ")
@@ -620,11 +627,11 @@ module Ampoule
         @task.add_comment(current_person, comment)
       end
       
-      @task.close if !@query["close"].empty?
-      @task.open  if !@query["reopen"].empty?
+      @task.close if !@query["close"].blank?
+      @task.open  if !@query["reopen"].blank?
       
       save_task(@task)
-      if @query["close"].empty? && @query["reopen"].empty?
+      if @query["close"].blank? && @query["reopen"].blank?
         "/#{@task.id}"
       else
         "/" # redirect to index if status was changed
@@ -646,7 +653,7 @@ module Ampoule
       @puller = Thread.new do
         loop do
           sleep(1 + rand(1))
-          @queue.push(:pull) if @queue.size < 2
+          @queue.push(:pull) if @queue.size < 1
         end
       end
       
@@ -838,6 +845,31 @@ module Ampoule
       response['Content-Type'] = "text/html"
     end
   end
+
+  class ::Object
+    def blank?; false end
+    def or(default = nil)
+      blank? ? (block_given? ? yield : default) : self 
+    end
+    def and
+      blank? ? nil : yield(self)
+    end
+  end
+  class ::FalseClass
+    def blank?; true end
+  end
+  class ::NilClass
+    def blank?; true end
+  end
+  class ::Array
+    def blank?; compact.empty? end
+  end
+  class ::String
+    def blank?; strip.empty? end
+  end
+  class ::Hash
+    def blank?; values.empty? end
+  end
   
 end
 
@@ -847,26 +879,3 @@ if $0 == __FILE__
     Ampoule::ServerInstance.start
   end
 end
-
-
-
-
-__END__
-
-1. Each item is a page which looks like HTTP request (headers + body):
-
-Title: html ui mockup\n
-Person: oleganza\n
-Status: opened\n
-Created: Tue Oct 27 16:35:01 2009 +0100
-Modified: Tue Oct 29 22:01:56 2009 +0100
-\n
-Arbitrary text goes here.
-With as many lines as you 
-can imagine.
-
-2. Items are stored under unique filenames:
-
-  _ampoule_tasks/20091027-181545-463129.amp
-
-
