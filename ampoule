@@ -148,13 +148,7 @@ module Ampoule
     def initialize_with_raw_file(id, raw_file)
       @modified_at = nil
       @id = id
-      headers, @body = raw_file.split("\n\n", 2)
-      @headers = headers.strip.split("\n").inject({}) do |h, line|
-        name, value = line.strip.split(/:\s*/,2)
-        h[name] = value
-        h
-      end
-      @body ||= ""
+      @headers, @body = raw_file.headers_and_body
     end
     
     def to_raw_file
@@ -229,7 +223,7 @@ module Ampoule
     end
     
     def add_comment(current_person, comment)
-      body << Comment.new(current_person, comment).to_raw_file
+      body << Comment.new(comment, :author => current_person).to_raw_file
     end
     
     def mark_as_modified
@@ -239,29 +233,35 @@ module Ampoule
   end
   
   class Comment
-    attr_accessor :person, :body, :date
-    def initialize(person, body, date = Time.now)
-      @person = person
+    attr_accessor :author, :body, :date, :status
+    def initialize(body = "", attrs = {})
+      @author = attrs[:author]
       @body = body
-      @date = date
+      @date = attrs[:date] || Time.now
+      @status = attrs[:status]
+    end
+    
+    def with_headers(hs)
+      @author = hs["Author"].or @author
+      @date   = hs["Date"].and {|d| Time.parse(d)}.or { @date }
+      @status = hs["Status"].or @status
+      self
     end
     
     def to_raw_file
-      %{\n\n@comment\n} <<
-      %{@author #{@person.gsub(/[\r\n]/,'')}\n} <<
-      %{@date #{@date}\n} <<
-      %{\n#{@body}}
+      buf = %{\n\n@comment\n}
+      buf << %{Author: #{@author.gsub(/[\r\n]/,'')}\n}
+      buf << %{Date: #{@date}\n}
+      buf << %{Status: #{@status}\n} if !@status.blank?
+      buf << %{\n#{@body}}
+      buf
     end
     
     def self.comments_from_raw_file(body)
       chunks = body.split("\n@comment\n")[1..-1] || []
       chunks.map do |chunk|
-        if chunk.strip =~ /@author ([^\n]+)\n@date ([^\n]+)\n(.*)/m
-          self.new($1, $3, Time.parse($2))
-        else
-          puts "Ampoule::Comment: could not parse chunk:\n#{chunk}\n(end of chunk)"
-          nil
-        end
+        hs, body = chunk.headers_and_body
+        self.new(body, {}).with_headers(hs)
       end
     end
     
@@ -292,9 +292,19 @@ module Ampoule
         attrs_for_body[:onload] = %{document.getElementById('#{domid}').focus()} if domid = attrs_for_body.delete(:focus)
         body(attrs_for_body) do
           yield if block_given?
+          br
+          br
         end
       end # html
     end # read
+    
+    def submit_button(attrs = {}, &blk)
+      input({:type => :submit, 
+             :name => :submit, 
+             :value => :OK, 
+             :disabled => (attrs.delete(:disabled) ? :disabled : nil)}.merge(attrs), &blk)
+    end
+    
   end # Layout
   
   class Index < Layout
@@ -306,7 +316,8 @@ module Ampoule
       tasks.each do |t|
         (t.closed? ? @closed_tasks : @opened_tasks) << t
       end
-      @closed_tasks.reverse!
+      @opened_tasks = @opened_tasks.sort_by {|t|  t.modified_at.to_i }
+      @closed_tasks = @closed_tasks.sort_by {|t| -t.modified_at.to_i }
     end
     
     def tasks_table(tasks, opts = {}, &blk)
@@ -317,7 +328,7 @@ module Ampoule
           tr do
             td(:class => "task-title textual") do
               a(:href => "/#{task.id}"){ h(task.title) }
-              small { task.modified_at.to_relative_string_if_recent }
+              nobr { small { task.modified_at.to_relative_string_if_recent } }
             end
             td(:class => "task-person textual") do
               h(task.person)
@@ -344,17 +355,15 @@ module Ampoule
                   input(:name => "title", :value => "", :id => :newitemtitle)
                 end
                 td :class => "task-person" do
-                  label = 'nobody'
-                  value = $last_assigned_person || label
-                  styleclass = (value != label ? "" : "empty")
-                  onfocus = "if (this.value === #{label.inspect}) {this.value = ''; this.className = ''}"
-                  input(:name    => :person, 
-                        :value   => value, 
-                        :id      => :newitemperson, 
-                        :onfocus => onfocus, 
-                        :class => styleclass)
-                  text("&nbsp;")
-                  input(:type => :submit, :value => "Add")
+                  value = $last_assigned_person.or { current_user_name }
+                  nobr do
+                    input(:name    => :person, 
+                          :value   => value, 
+                          :id      => :newitemperson,  
+                          :size => 15)
+                    text("&nbsp;")
+                    submit_button(:value => :Assign)
+                  end
                 end # td
               end # tr
             end # tfoot
@@ -388,7 +397,7 @@ module Ampoule
           div :class => "comments" do
             task.comments.each do |comment|
               label :class => "comment-label" do
-                text(h(comment.person))
+                text(h(comment.author))
                 small { comment.date.to_relative_string }
               end
               text(formatted_text(comment.body))
@@ -411,12 +420,12 @@ module Ampoule
           
           div :class => "buttons panel" do
             div :class => "save-button" do
-              input :type => :submit, :name => :save, :value => "Save"
+              submit_button(:name => :save, :value => :Save)
             end
             div :class => "status-buttons" do
-              input :type => :submit, :name => :close, :value => "Close", :disabled => (task.closed? ? :disabled : nil)
+              submit_button(:name => :close, :value => :Close, :disabled => task.closed?)
               text("&nbsp;")
-              input :type => :submit, :name => :reopen, :value => "Reopen", :disabled => (task.opened? ? :disabled : nil)
+              submit_button(:name => :reopen, :value => :Reopen, :disabled => task.opened?)
             end
           end
         end # form
@@ -465,6 +474,18 @@ module Ampoule
     end
   end
   
+  class ::String
+    def headers_and_body
+      headers, body = strip.split("\n\n", 2)
+      headers = headers.strip.split("\n").inject({}) do |h, line|
+        name, value = line.strip.split(/:\s*/,2)
+        h[name] = value
+        h
+      end
+      [headers, body || ""]
+    end
+  end
+  
   #
   # CSS
   #
@@ -506,15 +527,15 @@ module Ampoule
       apply(".new-task input", :font_family => font_family, :font_size => 1.0.em, :margin_left => -3.px, :padding_left => 0.px)
       apply(".empty", :color => "#999")
       apply(".tasks", :width=>"100%", :margin_left => "-1px") do
-        apply("td", :font_family => font_family, :font_size => 0.9.em, :padding => "0.1em 0 0.2em 0")
-        apply("td.textual", :overflow => "hidden")
+        apply("td", :font_family => font_family, :font_size => 0.9.em, :padding => "2px 0 3px 0")
+        apply("td.textual", :vertical_align => :top)
         apply("td.task-person", :font_size => 0.83.em)
         apply("tfoot td", :padding_top=>"0.5em")
         
         apply("a", :color => "#333", :text_decoration => "none")
         apply("a:hover", :color => "#000", :text_decoration => "underline")
         
-        apply(".task-title", :width=>"70%", :padding_right => "5px") do
+        apply(".task-title", :width=>"70%", :padding_right => "7px") do
           apply("input", :width=>"100%")
         end
         
