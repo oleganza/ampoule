@@ -1,8 +1,8 @@
 Title: ask for git username when not present
-Person: Oleg Andreev
+Person: someone else
 Status: opened
 Created: Thu Oct 29 16:57:17 +0100 2009
-Modified: Thu Oct 29 16:57:17 +0100 2009
+Modified: Thu Oct 29 17:38:14 +0100 2009
 
 
 
@@ -10,4 +10,9 @@ Modified: Thu Oct 29 16:57:17 +0100 2009
 Author: Oleg Andreev
 Date: Thu Oct 29 16:57:17 +0100 2009
 Status: opened
+
+@comment
+Author: Oleg Andreev
+Date: Thu Oct 29 17:38:14 +0100 2009
+Status: assigned to someone else
 
