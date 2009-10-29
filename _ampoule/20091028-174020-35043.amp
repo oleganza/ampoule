@@ -1,8 +1,8 @@
 Title: browse per-page history
 Person: oleg
-Status: closed
-Created: Wed Oct 28 09:40:20 -0700 2009
-Modified: Thu Oct 29 10:58:43 -0700 2009
+Status: opened
+Created: Wed Oct 28 17:40:20 +0100 2009
+Modified: Thu Oct 29 19:00:59 +0100 2009
 
 
 
@@ -10,4 +10,9 @@ Modified: Thu Oct 29 10:58:43 -0700 2009
 Author: Yurii Rashkovskii
 Date: Thu Oct 29 10:58:43 -0700 2009
 Status: closed
+
+@comment
+Author: Oleg Andreev
+Date: Thu Oct 29 19:00:59 +0100 2009
+Status: reopened
 
