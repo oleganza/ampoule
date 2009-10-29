@@ -343,7 +343,7 @@ module Ampoule
               small do
                 status = task.last_status_line.gsub(/assigned to .*? (by .*)/i, "reassigned \\1").gsub(/\.\Z/,"")
                 text(h(status) + " ")
-                nobr { task.modified_at.to_relative_string_if_recent } 
+                nobr { task.modified_at.to_relative_string_if_recent.and{|s| "(#{s})" }.to_s} 
               end
             end
             td(:class => "task-person textual") do
