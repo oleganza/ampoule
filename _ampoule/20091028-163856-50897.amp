@@ -2,7 +2,7 @@ Title: formatting task
 Person: oleg
 Status: closed
 Created: Sat Oct 28 00:00:00 +0200 2000
-Modified: Wed Oct 28 18:18:51 +0100 2009
+Modified: Thu Oct 29 17:47:45 +0100 2009
 
 
 @comment
@@ -109,3 +109,19 @@ Author: Oleg Andreev
 Date: Wed Oct 28 18:18:51 +0100 2009
 
 more comments
+
+@comment
+Author: Oleg Andreev
+Date: Thu Oct 29 17:47:45 +0100 2009
+
+    def formatted_text(text)
+      text = text.gsub(/\r\n/, "\n").gsub(/\r/, "\n")
+      paragraphs = text.split(/\n\n+/)
+      paragraphs.map do |paragraph|
+        if paragraph[/\n[ \t]+/]
+          %{<code><pre>#{h(paragraph)}</pre></code>}
+        else
+          %{<p>#{hbr(paragraph)}</p>}
+        end
+      end.join
+    end
