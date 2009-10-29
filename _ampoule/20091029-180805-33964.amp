@@ -1,8 +1,8 @@
 Title: replace task urls with task id to make them accessible on any address
 Person: Oleg Andreev
-Status: opened
+Status: closed
 Created: Thu Oct 29 18:08:05 +0100 2009
-Modified: Thu Oct 29 18:08:05 +0100 2009
+Modified: Thu Oct 29 18:35:19 +0100 2009
 
 
 
@@ -11,3 +11,9 @@ Author: Oleg Andreev
 Date: Thu Oct 29 18:08:05 +0100 2009
 Status: opened
 
+@comment
+Author: Oleg Andreev
+Date: Thu Oct 29 18:35:19 +0100 2009
+Status: closed
+
+Done. See http://localhost:8000/20091028-184754-59029 for examples
