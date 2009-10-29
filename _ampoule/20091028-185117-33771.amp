@@ -1,6 +1,13 @@
 Title: insert git config user.name instead of nobody for assignment
-Person: nobody
-Status: opened
+Person: oleg
+Status: closed
 Created: Wed Oct 28 18:51:17 +0100 2009
-Modified: Thu Oct 29 15:09:20 +0100 2009
+Modified: Thu Oct 29 15:09:36 +0100 2009
 
+
+
+@comment
+@author Oleg Andreev
+@date Thu Oct 29 15:09:36 +0100 2009
+
+done.
