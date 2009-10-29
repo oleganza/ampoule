@@ -222,8 +222,8 @@ module Ampoule
       @headers['Status'] = OPENED
     end
     
-    def add_comment(current_person, comment)
-      body << Comment.new(comment, :author => current_person).to_raw_file
+    def add_comment(comment)
+      body << comment.to_raw_file
     end
     
     def mark_as_modified
@@ -398,7 +398,7 @@ module Ampoule
             task.comments.each do |comment|
               label :class => "comment-label" do
                 text(h(comment.author))
-                small { comment.date.to_relative_string }
+                small { comment.status.to_s + " " + comment.date.to_relative_string }
               end
               text(formatted_text(comment.body))
             end
@@ -434,6 +434,7 @@ module Ampoule
     end # read
     
     def formatted_text(text)
+      return "" if text.blank?
       text = text.gsub(/\r\n/, "\n").gsub(/\r/, "\n")
       paragraphs = text.split(/\n\n+/)
       paragraphs.map do |paragraph|
@@ -618,6 +619,7 @@ module Ampoule
       task = Task.new
       task.title = title
       task.person = person
+      task.add_comment(Comment.new("", :author => current_user_name, :status => "opened"))
       save_task(task)
       $last_assigned_person = person
       "/"
@@ -631,31 +633,47 @@ module Ampoule
       @query = query
     end
     def perform
+      current_person = @query["current_person"].first.to_s
+      if current_person != current_user_name && !current_person.blank?
+        self.current_user_name = current_person # remember new value
+      end
+      
+      status = nil
+      
       title = @query["title"].first.to_s
       person = @query["person"].first.to_s
 
       @task.title = title
-      @task.person = person
       
-      comment = @query["comment"].first.to_s.strip
-      if comment.length > 0
-        current_person = @query["current_person"].first.to_s
-
-        if current_person != current_user_name && current_person.size > 0
-          self.current_user_name = current_person # remember new value
-        end
-        
-        @task.add_comment(current_person, comment)
+      if @task.person != person
+        status = %{assigned to #{person}}
       end
       
-      @task.close if !@query["close"].blank?
-      @task.open  if !@query["reopen"].blank?
+      @task.person = person
+      
+      status_changed = !@query["close"].blank? || !@query["reopen"].blank?
+      
+      if status_changed
+        if @query["close"].blank? 
+          status ||= "reopened"
+          @task.open
+        else
+          status ||= "closed"
+          @task.close
+        end
+      end
+      
+      comment_body = @query["comment"].first.to_s
+      if !status.blank? || !comment_body.blank?
+        @task.add_comment(Comment.new(comment_body, :author => current_user_name, :status => status))
+      end
       
       save_task(@task)
-      if @query["close"].blank? && @query["reopen"].blank?
-        "/#{@task.id}"
-      else
+      
+      if status_changed
         "/" # redirect to index if status was changed
+      else
+        "/#{@task.id}"
       end
     end
   end
