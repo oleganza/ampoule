@@ -1,8 +1,8 @@
 Title: semka,  kak  slyshno?
 Person: semka
-Status: opened
-Created: Thu Oct 29 18:55:12 +0100 2009
-Modified: Thu Oct 29 18:55:19 +0100 2009
+Status: closed
+Created: Thu Oct 29 22:55:12 +0500 2009
+Modified: Thu Oct 29 22:59:37 +0500 2009
 
 
 
@@ -15,4 +15,15 @@ Status: opened
 Author: Oleg Andreev
 Date: Thu Oct 29 18:55:19 +0100 2009
 Status: assigned to semka
+
+@comment
+Author: Semka Novikov
+Date: Thu Oct 29 22:59:33 +0500 2009
+
+Nice.
+
+@comment
+Author: Semka Novikov
+Date: Thu Oct 29 22:59:37 +0500 2009
+Status: closed
 
