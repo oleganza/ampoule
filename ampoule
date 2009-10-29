@@ -497,7 +497,6 @@ module Ampoule
       # 3. Highlight other links
       text.gsub!(%r{(http://[^\s<>\n\r]+)}) do
         url = $1
-        p url
         last = url[-1,1]
         if last =~ /[\.:;,?!]/
           url = url[0..-2]
