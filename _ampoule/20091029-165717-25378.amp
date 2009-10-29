@@ -1,8 +1,8 @@
 Title: ask for git username when not present
 Person: Oleg Andreev
-Status: opened
+Status: closed
 Created: Thu Oct 29 16:57:17 +0100 2009
-Modified: Thu Oct 29 17:38:24 +0100 2009
+Modified: Thu Oct 29 18:06:30 +0100 2009
 
 
 
@@ -21,3 +21,9 @@ Author: Oleg Andreev
 Date: Thu Oct 29 17:38:24 +0100 2009
 Status: assigned to Oleg Andreev
 
+@comment
+Author: Oleg Andreev
+Date: Thu Oct 29 18:06:30 +0100 2009
+Status: closed
+
+done in dc5f9b6
