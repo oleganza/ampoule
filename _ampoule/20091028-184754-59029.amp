@@ -1,8 +1,8 @@
 Title: highlight url in the text
 Person: oleg
-Status: opened
+Status: closed
 Created: Wed Oct 28 18:47:54 +0100 2009
-Modified: Thu Oct 29 18:21:17 +0100 2009
+Modified: Thu Oct 29 18:34:48 +0100 2009
 
 
 
@@ -17,3 +17,10 @@ http://ya.ru/20091029-181447-22351.html#something:
 some text after link.
 
 See also: http://see.also.
+
+@comment
+Author: Oleg Andreev
+Date: Thu Oct 29 18:34:48 +0100 2009
+Status: closed
+
+done.
