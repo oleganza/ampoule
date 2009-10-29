@@ -115,7 +115,7 @@ module Ampoule
     end
     
     def current_user_name
-      git_user_name.or{git_user_email}.or{"Anonymous"} 
+      git_user_name
     end
     
   end
@@ -294,26 +294,32 @@ module Ampoule
       @page_title = project_title
     end
     
-    def read(attrs_for_body = {})
+    def layout(attrs_for_body = {})
       html do
         head do
           meta "http-equiv" => "Content-Type", :content => "text/html; charset=UTF-8"
           link :rel => "stylesheet", :href=>"/style.css", :type => "text/css"
           title { page_title }
         end
-        attrs_for_body[:onload] = %{document.getElementById('#{domid}').focus()} if domid = attrs_for_body.delete(:focus)
+        if domid = attrs_for_body.delete(:focus)
+          attrs_for_body[:onload] = %{document.getElementById('#{domid}').focus()} 
+        end
         body(attrs_for_body) do
           yield if block_given?
           br
           br
         end
       end # html
-    end # read
+    end # layout
+    
+    def read(attrs_for_body = {}, &blk)
+      layout(attrs_for_body, &blk)
+    end
     
     def submit_button(attrs = {}, &blk)
       input({:type => :submit, 
              :name => :submit, 
-             :value => :OK, 
+             :value => :Ok, 
              :disabled => (attrs.delete(:disabled) ? :disabled : nil)}.merge(attrs), &blk)
     end
     
@@ -358,7 +364,27 @@ module Ampoule
     end
     
     def read
-      super :focus => :newitemtitle do
+      if current_user_name.blank?
+        user_name_prompt
+      else
+        index
+      end
+    end
+    
+    def user_name_prompt
+      layout :focus => :username do
+        form :action => "/username", :method => "POST" do
+          tag(:p) { "Hello, what is your name?" }
+          tag(:p) { small { "Your name will be stored in .git/config" } }
+          tag(:p) { input(:value => "", :name => :name, :id => :username) 
+                    submit_button(:value => "save")
+          }
+        end
+      end
+    end
+    
+    def index
+      layout :focus => :newitemtitle do
         form :action => "/title", :method => "POST" do
           h1(:class => 'index-title') { input(:value => page_title, :name => :title) }
         end
@@ -642,6 +668,18 @@ module Ampoule
     end
   end
   
+  class UsernameUpdate
+    include FileHelper
+    def initialize(query)
+      @query = query
+    end
+    def perform
+      name = @query["name"].first.to_s
+      self.current_user_name = name
+      "/"
+    end
+  end
+  
   class TaskCreate
     include FileHelper
     def initialize(query)
@@ -908,6 +946,8 @@ module Ampoule
       content_type = "text/html"
       if request.path == "/title"
         location = TitleUpdate.new(CGI::parse(request.body)).perform
+      elsif request.path == "/username"
+        location = UsernameUpdate.new(CGI::parse(request.body)).perform
       elsif request.path == "/"
         location = TaskCreate.new(CGI::parse(request.body)).perform
       else
