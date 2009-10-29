@@ -480,13 +480,34 @@ module Ampoule
       return "" if text.blank?
       text = text.gsub(/\r\n/, "\n").gsub(/\r/, "\n")
       paragraphs = text.split(/\n\n+/)
-      paragraphs.map do |paragraph|
+      text = paragraphs.map do |paragraph|
         if paragraph[/\n[ \t]+/]
           %{<code><pre>#{h(paragraph)}</pre></code>}
         else
           %{<p>#{hbr(paragraph)}</p>}
         end
       end.join
+      
+      # 1. Unwrap link to task 
+      text.gsub!(%r{http://localhost:\d+/(\d{8}-\d{6}-\d+)/?}, "task \\1")
+      
+      # 2. Wrap task id into link
+      text.gsub!(%r{((task|case|bug) (\d{8}-\d{6}-\d+))}, %{<a href="/\\3">\\1</a>})
+      
+      # 3. Highlight other links
+      text.gsub!(%r{(http://[^\s<>\n\r]+)}) do
+        url = $1
+        p url
+        last = url[-1,1]
+        if last =~ /[\.:;,?!]/
+          url = url[0..-2]
+        else
+          last = ""
+        end
+        %{<a href="#{url}">#{url}</a>#{last}}
+      end
+      
+      text
     end
     
     def hbr(text)
