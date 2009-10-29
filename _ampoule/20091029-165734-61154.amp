@@ -2,7 +2,7 @@ Title: show status info in comments
 Person: Oleg Andreev
 Status: opened
 Created: Thu Oct 29 16:57:34 +0100 2009
-Modified: Thu Oct 29 16:57:34 +0100 2009
+Modified: Thu Oct 29 16:58:56 +0100 2009
 
 
 
@@ -11,3 +11,8 @@ Author: Oleg Andreev
 Date: Thu Oct 29 16:57:34 +0100 2009
 Status: opened
 
+@comment
+Author: Oleg Andreev
+Date: Thu Oct 29 16:58:56 +0100 2009
+
+Test
