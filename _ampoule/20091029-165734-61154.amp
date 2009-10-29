@@ -1,8 +1,8 @@
 Title: show status info in comments
-Person: Oleg Andreev2
+Person: Oleg Andreev
 Status: opened
 Created: Thu Oct 29 16:57:34 +0100 2009
-Modified: Thu Oct 29 17:04:10 +0100 2009
+Modified: Thu Oct 29 17:04:14 +0100 2009
 
 
 
@@ -51,3 +51,9 @@ Author: Oleg Andreev
 Date: Thu Oct 29 17:04:10 +0100 2009
 
 qweqw
+
+@comment
+Author: Oleg Andreev
+Date: Thu Oct 29 17:04:14 +0100 2009
+Status: assigned to Oleg Andreev
+
