@@ -70,11 +70,7 @@ module Ampoule
   
   module FileHelper
     include GitHelper
-    
-    def h(html)
-      CGI::escapeHTML(html)
-    end
-    
+        
     def file_contents_for_path(path)
       $file_buffer.read(path).to_s.or { nil }
     end
@@ -130,38 +126,68 @@ module Ampoule
   end
   
   module PresentationBuilders
-    module HTMLBuilder
-      def init_html_builder
-        @_html_stack = []
+    if !defined? BlankSlate
+      class BlankSlate
+        class <<self; alias __undef_method undef_method; end
+        alias __instance_eval instance_eval
+        ancestors.inject([]){|m,a| m + a.methods }.uniq.
+          each { |m| (__undef_method(m) rescue nil) unless m =~ /^__/ }
       end
-      def text(text)
-        buf = (@_html_stack.last || "") << text
-        buf if @_html_stack.empty?
+    end
+    
+    class XMLBuilder < BlankSlate
+      def initialize(delegate = nil, &blk)
+        @delegate = delegate
+        @buffer = ""
+        __instance_eval(&blk)
       end
+
+      def puts(s)
+        print("#{s}\n")
+      end
+
+      def print(text)
+        @buffer << text
+        ""
+      end
+
       def tag(name, attrs = {}, &blk)
-        buf = @_html_stack.last || ""
-        buf << %{<#{name}}
-        if attrs
-          rendered_attrs = attrs.inject('') do |ra, (k,v)|
-            v ? (ra << " " << k.to_s << "=" << '"' << CGI::escapeHTML(v.to_s) << '"') : ra
-          end
-          buf << rendered_attrs
+        @buffer << %{<#{name}} << (attrs || {}).inject('') do |ra, (k,v)|
+          v ? (ra << " " << k.to_s << "=" << '"' << CGI::escapeHTML(v.to_s) << '"') : ra
         end
         if blk
-          @_html_stack.push("")
-          r = yield
-          r = "" if !r.is_a?(String)
-          buf << ">" << @_html_stack.pop << r << "</#{name}>\n"
+          @buffer << ">" << yield.to_s << "</#{name}>"
         else
-          buf << " />\n"
+          @buffer << " />"
         end
-        buf if @_html_stack.empty?
+        ""
       end
+
       def method_missing(name, *args, &blk)
         tag(name, *args, &blk)
       end
+      
+      def delegate(method = nil)
+        if method
+          class <<self; self; end.send(:define_method, method) { @delegate.send(method) }
+        else
+          @delegate
+        end
+      end
+      
+      def helper(name, &implementation)
+        class <<self; self; end.send(:define_method, name, &implementation)
+      end
+      
+      def h(text)
+        CGI::escapeHTML(text)
+      end
+      
+      def to_s
+        @buffer
+      end
     end
-  
+      
     module CSSBuilder
     
       class ::Numeric
@@ -348,69 +374,112 @@ module Ampoule
   
   module Layout
     include FileHelper
-    include PresentationBuilders::HTMLBuilder
     attr_accessor :page_title
-    def initialize(*args,&blk)
-      super(*args,&blk)
-      init_html_builder
-      @page_title = project_title
+    
+    def page_title
+      @page_title || project_title 
     end
     
-    def layout(attrs_for_body = {})
-      html do
-        head do
-          meta "http-equiv" => "Content-Type", :content => "text/html; charset=UTF-8"
-          link :rel => "stylesheet", :href=>"/style.css", :type => "text/css"
-          title { page_title }
+    def layout(attrs_for_body = {}, &blk)
+      PresentationBuilders::XMLBuilder.new(self) do
+        
+        delegate :page_title
+        
+        helper :tasks_table do |tasks, opts, &blk|
+          opts = opts.dup
+          cls = ["tasks", opts.delete(:class), opts.delete("class")].compact.join(" ")
+          table({:border => 0, :class => cls}.merge(opts)) do
+
+            blk.call if blk
+
+            tasks.each do |task|
+              tr do
+                td(:class => "task-title textual") do
+                  a(:href => "/#{task.id}"){ h(task.title) }
+                  small do
+                    status = task.last_status_line.gsub(/assigned to .*? (by .*)/i, "reassigned \\1").gsub(/([^\.])\.\Z/,"\\1")
+                    puts(h(status) + " ")
+                    nobr { task.modified_at.to_relative_string_if_recent.and{|s| "(#{s})" }.to_s} 
+                  end
+                end
+                td(:class => "task-person textual") do
+                  h(task.assigned_to)
+                end
+              end
+            end # tasks.each
+            
+            ""
+          end # table
+          
+        end # helper :tasks_table
+        
+        helper :formatted_text do |text|
+          return "" if text.blank?
+          text = text.gsub(/\r\n/, "\n").gsub(/\r/, "\n")
+          paragraphs = text.split(/\n\n+/)
+          text = paragraphs.map do |paragraph|
+            if paragraph[/\n[ \t]+/]
+              %{<code><pre>#{h(paragraph)}</pre></code>}
+            else
+              %{<p>#{hbr(paragraph)}</p>}
+            end
+          end.join
+
+          # 1. Unwrap link to task 
+          text.gsub!(%r{http://localhost:\d+/(\d{8}-\d{6}-\d+)/?}, "task \\1")
+
+          # 2. Wrap task id into link
+          text.gsub!(%r{((task|case|bug) (\d{8}-\d{6}-\d+))}, %{<a href="/\\3">\\1</a>})
+
+          # 3. Highlight other links
+          text.gsub!(%r{(http://[^\s<>\n\r]+)}) do
+            url = $1
+            last = url[-1,1]
+            if last =~ /[\.:;,?!]/
+              url = url[0..-2]
+            else
+              last = ""
+            end
+            %{<a href="#{url}">#{url}</a>#{last}}
+          end
+
+          text
+        end # helper :formatted_text
+
+        helper :hbr do |text|
+          h(text.strip).gsub(/\n/, "<br/>")
         end
-        if domid = attrs_for_body.delete(:focus)
-          attrs_for_body[:onload] = %{document.getElementById('#{domid}').focus()} 
+        
+        helper :submit_button do |attrs, &blk|
+          input({:type => :submit, 
+                 :name => :submit, 
+                 :value => :Ok, 
+                 :disabled => (attrs.delete(:disabled) ? :disabled : nil)}.merge(attrs), &blk)
         end
-        body(attrs_for_body) do
-          yield if block_given?
-          br
-          br
-        end
-      end # html
+        
+        
+        html do
+          head do
+            meta "http-equiv" => "Content-Type", :content => "text/html; charset=UTF-8"
+            link :rel => "stylesheet", :href=>"/style.css", :type => "text/css"
+            title { page_title }
+          end
+          if domid = attrs_for_body.delete(:focus)
+            attrs_for_body[:onload] = %{document.getElementById('#{domid}').focus()} 
+          end
+          body(attrs_for_body) do
+            __instance_eval(&blk) if blk
+            br
+            br
+          end
+        end # html
+      end # XMLBuilder
     end # layout
         
-    def submit_button(attrs = {}, &blk)
-      input({:type => :submit, 
-             :name => :submit, 
-             :value => :Ok, 
-             :disabled => (attrs.delete(:disabled) ? :disabled : nil)}.merge(attrs), &blk)
-    end
-    
   end # Layout
   
   class TasksController < Controller
     include Layout
-    
-    def tasks_table(tasks, opts = {}, &blk)
-      opts = opts.dup
-      cls = ["tasks", opts.delete(:class), opts.delete("class")].compact.join(" ")
-      table({:border => 0, :class => cls}.merge(opts)) do
-        
-        yield if block_given?
-        
-        tasks.each do |task|
-          tr do
-            td(:class => "task-title textual") do
-              a(:href => "/#{task.id}"){ h(task.title) }
-              small do
-                status = task.last_status_line.gsub(/assigned to .*? (by .*)/i, "reassigned \\1").gsub(/([^\.])\.\Z/,"\\1")
-                text(h(status) + " ")
-                nobr { task.modified_at.to_relative_string_if_recent.and{|s| "(#{s})" }.to_s} 
-              end
-            end
-            td(:class => "task-person textual") do
-              h(task.assigned_to)
-            end
-          end
-        end # tasks.each
-        
-      end # table
-    end
     
     def get
       if current_user_name.blank?
@@ -423,11 +492,12 @@ module Ampoule
     def user_name_prompt
       layout :focus => :username do
         form :action => "/username", :method => "POST" do
-          tag(:p) { "Hello, what is your name?" }
-          tag(:p) { small { "Your name will be stored in .git/config" } }
-          tag(:p) { input(:value => "", :name => :name, :id => :username) 
-                    submit_button(:value => "save")
-          }
+          p { "Hello, what is your name?" }
+          p { small { "Your name will be stored in .git/config" } }
+          p do 
+            input(:value => "", :name => :name, :id => :username) 
+            submit_button(:value => "save")
+          end
         end
       end
     end
@@ -444,6 +514,9 @@ module Ampoule
       
       
       layout :focus => :newitemtitle do
+        
+        delegate :current_user_name
+        
         form :action => "/title", :method => "POST" do
           h1(:class => 'index-title') { input(:value => page_title, :name => :title) }
         end
@@ -461,7 +534,7 @@ module Ampoule
                         :value   => value, 
                         :id      => :newitemperson,  
                         :size => 15)
-                  text("&nbsp;")
+                  puts("&nbsp;")
                   submit_button(:value => :Assign)
                 end
               end # td
@@ -501,6 +574,8 @@ module Ampoule
       
       layout :focus => :comment do
         
+        delegate :task
+              
         small(:style => %{position:absolute; top:1em;}) { a(:href => "/") { project_title + " index" } }
         
         form(:action => "/#{task.id}", :method => :POST, :class => 'edit-task') do
@@ -509,12 +584,13 @@ module Ampoule
           div :class => "comments" do
             task.comments.each do |comment|
               label :class => "comment-label" do
-                text(h(comment.author))
+                puts(h(comment.author))
 
                 small { comment.status.to_s + " " + comment.date.to_relative_string }
               end
-              text(formatted_text(comment.body))
+              puts(formatted_text(comment.body))
             end
+            ""
           end
           br
           input :class => "current-person", 
@@ -528,14 +604,14 @@ module Ampoule
           div :class => "buttons panel" do
             div :class => "save-button" do
               span :class => "assigned-to" do 
-                text("assigned to ")
+                puts("assigned to ")
                 input(:name => "assigned_to", :value => task.assigned_to)
               end
               submit_button(:name => :save, :value => :Save)
             end
             div :class => "status-buttons" do
               submit_button(:name => :close, :value => :Close, :disabled => task.closed?)
-              text("&nbsp;")
+              print("&nbsp;")
               submit_button(:name => :reopen, :value => :Reopen, :disabled => task.opened?)
             end
           end
@@ -543,44 +619,7 @@ module Ampoule
         
       end # super do
     end # read
-    
-    def formatted_text(text)
-      return "" if text.blank?
-      text = text.gsub(/\r\n/, "\n").gsub(/\r/, "\n")
-      paragraphs = text.split(/\n\n+/)
-      text = paragraphs.map do |paragraph|
-        if paragraph[/\n[ \t]+/]
-          %{<code><pre>#{h(paragraph)}</pre></code>}
-        else
-          %{<p>#{hbr(paragraph)}</p>}
-        end
-      end.join
-      
-      # 1. Unwrap link to task 
-      text.gsub!(%r{http://localhost:\d+/(\d{8}-\d{6}-\d+)/?}, "task \\1")
-      
-      # 2. Wrap task id into link
-      text.gsub!(%r{((task|case|bug) (\d{8}-\d{6}-\d+))}, %{<a href="/\\3">\\1</a>})
-      
-      # 3. Highlight other links
-      text.gsub!(%r{(http://[^\s<>\n\r]+)}) do
-        url = $1
-        last = url[-1,1]
-        if last =~ /[\.:;,?!]/
-          url = url[0..-2]
-        else
-          last = ""
-        end
-        %{<a href="#{url}">#{url}</a>#{last}}
-      end
-      
-      text
-    end
-    
-    def hbr(text)
-      h(text.strip).gsub(/\n/, "<br/>")
-    end
-    
+        
     def post
       current_person = param(:current_person)
       if current_person != current_user_name && !current_person.blank?
@@ -912,15 +951,6 @@ module Ampoule
     end
   
     class ::String
-      def headers_and_body
-        headers, body = strip.split("\n\n", 2)
-        headers = headers.strip.split("\n").inject({}) do |h, line|
-          name, value = line.strip.split(/:\s*/,2)
-          h[name] = value
-          h
-        end
-        [headers, body || ""]
-      end
       def to_short_line
         max_len = 40
         if gsub("\n"," ") =~ %r{\A(.{10,#{max_len}}\S[\.\?\!\(\[\{]\s)}u
