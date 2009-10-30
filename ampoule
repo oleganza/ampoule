@@ -428,6 +428,7 @@ module Ampoule
     def layout(attrs_for_body = {}, &blk)
       PresentationBuilders::XMLBuilder.new(self) do
         
+        delegate :project_title
         delegate :page_title
         
         helper :tasks_table do |tasks, opts, &blk|
