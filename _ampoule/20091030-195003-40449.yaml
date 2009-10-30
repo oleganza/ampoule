@@ -1,40 +1,20 @@
 --- !ruby/struct:Ampoule::Task 
-title: !str:WEBrick::HTTPUtils::FormData 
-  str: fulltext search index
-  "@filename": 
-  "@header": &id001 {}
-
-  "@name": title
-  "@next_data": 
-  "@raw_header": &id002 []
-
-assigned_to: !str:WEBrick::HTTPUtils::FormData 
-  str: Oleg Andreev
-  "@filename": 
-  "@header": *id001
-  "@name": assigned_to
-  "@next_data": 
-  "@raw_header": *id002
+title: fulltext search index
+assigned_to: Oleg Andreev
 status: opened
 created_at: 2009-10-30 19:50:03.409535 +01:00
-modified_at: 2009-10-30 19:50:10.407698 +01:00
+modified_at: 2009-10-30 20:04:05.845035 +01:00
 comments: 
 - !ruby/struct:Ampoule::Comment 
   author: Oleg Andreev
   date: 2009-10-30 19:50:03.410034 +01:00
   status: opened
-  body: 
+  body: ""
 - !ruby/struct:Ampoule::Comment 
   author: Oleg Andreev
   date: 2009-10-30 19:50:10.410436 +01:00
   status: 
-  body: !str:WEBrick::HTTPUtils::FormData 
-    str: |-
-      like this one:
-      
-      http://eigenclass.org/hiki.rb?simple+full+text+search+engine
-    "@filename": 
-    "@header": *id001
-    "@name": comment
-    "@next_data": 
-    "@raw_header": *id002
+  body: |-
+    like this one:
+    
+    http://eigenclass.org/hiki.rb?simple+full+text+search+engine
