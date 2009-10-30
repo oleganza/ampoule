@@ -3,7 +3,7 @@ title: make HTMLBuilder a separate class, not a mixin
 assigned_to: Oleg Andreev
 status: closed
 created_at: 2009-10-30 16:55:26.940780 +01:00
-modified_at: 2009-10-30 20:03:58.677044 +01:00
+modified_at: 2009-10-30 20:04:02.216230 +01:00
 comments: 
 - !ruby/struct:Ampoule::Comment 
   author: Oleg Andreev
