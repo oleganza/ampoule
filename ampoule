@@ -560,12 +560,12 @@ module Ampoule
     
     def to_short_line
       max_len = 40
-      if (gsub(/[\.\?\!]\Z/,"")+".").gsub("\n"," ") =~ %r{\A(.{10,#{max_len}}\S[\.\?\!])}u
-        $1
+      if gsub("\n"," ") =~ %r{\A(.{10,#{max_len}}\S[\.\?\!\(\[\{]\s)}u
+        $1.gsub(/\s*[\(\[\{]\Z/,"")
       elsif self.size > max_len
-        split(//u)[0,max_len].join + "..."
+        split(//u)[0,max_len].join.gsub(/\s*[\(\[\{]\Z/,"") + "..."
       else
-        self
+        self.gsub(/\s*[\(\[\{]\Z/,"")
       end
     end
   end
