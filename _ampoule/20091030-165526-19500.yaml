@@ -1,0 +1,26 @@
+--- !ruby/struct:Ampoule::Task 
+title: !str:WEBrick::HTTPUtils::FormData 
+  str: make HTMLBuilder a separate class, not a mixin
+  "@filename": 
+  "@header": &id001 {}
+
+  "@name": title
+  "@next_data": 
+  "@raw_header": &id002 []
+
+assigned_to: !str:WEBrick::HTTPUtils::FormData 
+  str: Oleg Andreev
+  "@filename": 
+  "@header": *id001
+  "@name": assigned_to
+  "@next_data": 
+  "@raw_header": *id002
+status: opened
+created_at: 2009-10-30 16:55:26.940780 +01:00
+modified_at: 2009-10-30 16:55:26.939187 +01:00
+comments: 
+- !ruby/struct:Ampoule::Comment 
+  author: Oleg Andreev
+  date: 2009-10-30 16:55:26.941278 +01:00
+  status: opened
+  body: 
