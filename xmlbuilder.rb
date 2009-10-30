@@ -47,32 +47,35 @@ class XMLBuilder < BlankSlate
   end
 end
 
+if $0 == __FILE__
 
-color = "red"
+  color = "red"
 
-s = XMLBuilder.new do 
+  s = XMLBuilder.new do 
   
-  helper :block do |cls, &blk|
-    div(:class => "block #{cls}") do
-      blk.call
-    end
-  end
-  
-  html :xmlns => :namespace do
-    body do
-      text("prefix")
-      block(color) do
-        text "inner #{color} text!"
+    helper :block do |cls, &blk|
+      div(:class => "block #{cls}") do
+        blk.call
       end
-      puts "suffix1"
-      puts "suffix2"
     end
-    "puffix"
-  end
+  
+    html :xmlns => :namespace do
+      body do
+        text("prefix")
+        block(color) do
+          text "inner #{color} text!"
+        end
+        puts "suffix1"
+        puts "suffix2"
+      end
+      "puffix"
+    end
   
   
-end.to_s
+  end.to_s
 
-puts s
+  puts s
+
+end
 
 
