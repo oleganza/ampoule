@@ -2,7 +2,7 @@ Title: ampoule inside a regular project repository
 Person: Oleg Andreev
 Status: opened
 Created: Fri Oct 30 13:08:33 +0100 2009
-Modified: Fri Oct 30 13:08:33 +0100 2009
+Modified: Fri Oct 30 13:14:37 +0100 2009
 
 
 
@@ -10,4 +10,16 @@ Modified: Fri Oct 30 13:08:33 +0100 2009
 Author: Oleg Andreev
 Date: Fri Oct 30 13:08:33 +0100 2009
 Status: opened
+
+@comment
+Author: Oleg Andreev
+Date: Fri Oct 30 13:14:37 +0100 2009
+
+The interesting case is to store tasks inside the regular repository (in a detached branch, probably). 
+
+The working tree for this branch should be located in .git/ampoule/
+
+1) init: to avoid full repository clone into .git/ampoule (which consumes disk space and cpu time), we should create a shallow clone of the current repository and update config
+
+2) pull: fetch the special branch "ampoule-tasks"; then merge it to the local ampoule-tasks branch
 
