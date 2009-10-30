@@ -1,0 +1,7 @@
+--- !ruby/struct:Ampoule::Task 
+title: second
+assigned_to: Oleg Andreev
+status: 
+created_at: 
+modified_at: 2009-10-30 15:18:32.511722 +01:00
+comments: 

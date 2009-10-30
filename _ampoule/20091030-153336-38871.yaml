@@ -1,0 +1,52 @@
+--- !ruby/struct:Ampoule::Task 
+title: fourth
+assigned_to: Oleg Andreev
+status: closed
+created_at: 2009-10-30 15:33:36.744668 +01:00
+modified_at: 2009-10-30 15:52:42.311607 +01:00
+comments: 
+- !ruby/struct:Ampoule::Comment 
+  author: Oleg Andreev
+  date: 2009-10-30 15:39:11.542324 +01:00
+  status: 
+  body: asd
+- !ruby/struct:Ampoule::Comment 
+  author: Oleg Andreev
+  date: 2009-10-30 15:39:12.741324 +01:00
+  status: 
+  body: wqe
+- !ruby/struct:Ampoule::Comment 
+  author: Oleg Andreev
+  date: 2009-10-30 15:39:14.324073 +01:00
+  status: 
+  body: "321"
+- !ruby/struct:Ampoule::Comment 
+  author: Oleg Andreev
+  date: 2009-10-30 15:39:15.797025 +01:00
+  status: assigned to Oleg Andreev2
+  body: ""
+- !ruby/struct:Ampoule::Comment 
+  author: Oleg Andreev
+  date: 2009-10-30 15:39:18.342946 +01:00
+  status: assigned to Oleg Andreev
+  body: ""
+- !ruby/struct:Ampoule::Comment 
+  author: Oleg Andreev
+  date: 2009-10-30 15:39:19.238230 +01:00
+  status: closed
+  body: ""
+- !ruby/struct:Ampoule::Comment 
+  author: Oleg Andreev
+  date: 2009-10-30 15:39:22.015237 +01:00
+  status: reopened
+  body: ""
+- !ruby/struct:Ampoule::Comment 
+  author: Oleg Andreev
+  date: 2009-10-30 15:39:34.789492 +01:00
+  status: 
+  body: "  class Comment < Model(:author, :date, :status, :body)\r\n    def date\r\n      super.or { Time.now }\r\n    end\r\n  end\r\n  "
+- !ruby/struct:Ampoule::Comment 
+  author: Oleg Andreev
+  date: 2009-10-30 15:52:42.316998 +01:00
+  status: closed
+  body: ""

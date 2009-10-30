@@ -1,0 +1,8 @@
+--- !ruby/struct:Ampoule::Task 
+title: third
+assigned_to: Oleg Andreev
+status: opened
+created_at: 2009-10-30 15:33:24.298343 +01:00
+modified_at: 2009-10-30 15:33:24.297012 +01:00
+comments: []
+
