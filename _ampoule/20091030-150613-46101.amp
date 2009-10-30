@@ -1,8 +1,8 @@
-Title: test/shmest
+Title: test
 Person: Oleg Andreev
 Status: opened
-Created: Fri Oct 30 13:06:13 +0100 2009
-Modified: Fri Oct 30 13:07:49 +0100 2009
+Created: Fri Oct 30 15:06:13 +0300 2009
+Modified: Fri Oct 30 15:08:12 +0300 2009
 
 
 
@@ -16,3 +16,9 @@ Author: Oleg Andreev
 Date: Fri Oct 30 13:07:41 +0100 2009
 
 shmest
+
+@comment
+Author: melfar
+Date: Fri Oct 30 15:08:12 +0300 2009
+
+pashed
