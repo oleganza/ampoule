@@ -1,8 +1,8 @@
 Title: hi seva!
 Person: seva
-Status: opened
+Status: closed
 Created: Fri Oct 30 13:05:03 +0100 2009
-Modified: Fri Oct 30 13:05:15 +0100 2009
+Modified: Fri Oct 30 13:36:42 +0100 2009
 
 
 
@@ -15,4 +15,9 @@ Status: opened
 Author: Oleg Andreev
 Date: Fri Oct 30 13:05:15 +0100 2009
 Status: assigned to seva
+
+@comment
+Author: Oleg Andreev
+Date: Fri Oct 30 13:36:42 +0100 2009
+Status: closed
 
