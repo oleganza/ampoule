@@ -1,26 +1,12 @@
 --- !ruby/struct:Ampoule::Task 
-title: !str:WEBrick::HTTPUtils::FormData 
-  str: preview uploaded pictures
-  "@filename": 
-  "@header": &id001 {}
-
-  "@name": title
-  "@next_data": 
-  "@raw_header": &id002 []
-
-assigned_to: !str:WEBrick::HTTPUtils::FormData 
-  str: Oleg Andreev
-  "@filename": 
-  "@header": *id001
-  "@name": assigned_to
-  "@next_data": 
-  "@raw_header": *id002
+title: preview uploaded pictures
+assigned_to: Oleg Andreev
 status: opened
 created_at: 2009-10-30 19:54:54.842797 +01:00
-modified_at: 2009-10-30 19:54:54.841007 +01:00
+modified_at: 2009-10-30 20:04:13.706142 +01:00
 comments: 
 - !ruby/struct:Ampoule::Comment 
   author: Oleg Andreev
   date: 2009-10-30 19:54:54.843294 +01:00
   status: opened
-  body: 
+  body: ""
