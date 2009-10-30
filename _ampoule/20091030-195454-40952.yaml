@@ -3,7 +3,7 @@ title: preview uploaded pictures
 assigned_to: Oleg Andreev
 status: opened
 created_at: 2009-10-30 19:54:54.842797 +01:00
-modified_at: 2009-10-30 20:04:13.706142 +01:00
+modified_at: 2009-10-30 20:05:36.079262 +01:00
 comments: 
 - !ruby/struct:Ampoule::Comment 
   author: Oleg Andreev
