@@ -315,7 +315,7 @@ module Ampoule
     end
     
     def id
-      @id ||= Time.now.strftime("%Y%m%d-%H%M%S-#{rand(2**16)}")
+      @id ||= Time.now.strftime("%Y%m%d-%H%M%S-#{rand(2**16).to_s.rjust(5,'0')}")
     end
     
     default(:title)       { "Untitled" }
