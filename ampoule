@@ -350,7 +350,7 @@ module Ampoule
             td(:class => "task-title textual") do
               a(:href => "/#{task.id}"){ h(task.title) }
               small do
-                status = task.last_status_line.gsub(/assigned to .*? (by .*)/i, "reassigned \\1").gsub(/\.\Z/,"")
+                status = task.last_status_line.gsub(/assigned to .*? (by .*)/i, "reassigned \\1").gsub(/([^\.])\.\Z/,"\\1")
                 text(h(status) + " ")
                 nobr { task.modified_at.to_relative_string_if_recent.and{|s| "(#{s})" }.to_s} 
               end
@@ -560,7 +560,7 @@ module Ampoule
     
     def to_short_line
       max_len = 40
-      if (strip+".").gsub("\n"," ") =~ %r{\A(.{10,#{max_len}}\S\.)}u
+      if (gsub(/[\.\?\!]\Z/,"")+".").gsub("\n"," ") =~ %r{\A(.{10,#{max_len}}\S[\.\?\!])}u
         $1
       elsif self.size > max_len
         split(//u)[0,max_len].join + "..."
