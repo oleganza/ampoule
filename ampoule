@@ -586,7 +586,7 @@ module Ampoule
       apply(:body, 
         :font => font, 
         :color => "#333",
-        :margin => "3em 1em 1em 5em")
+        :margin => "3em 1em 1em 4em")
         
       apply(:h1, :font_size => 1.3.em) do
         apply(:input,
