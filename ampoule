@@ -367,6 +367,9 @@ module Ampoule
   
   class Comment < Model(:author, :date, :status, :body)
     default(:date) { Time.now }
+    def body
+      super.to_s
+    end
   end
   
   
@@ -384,7 +387,9 @@ module Ampoule
     end
     
     def param(param, default = nil)
-      request.query[param.to_s] || default
+      r = request.query[param.to_s] || default
+      return r.to_s if r.is_a?(String) # fight WEBrick::HTTPUtils::FormData 
+      r
     end
     
     def get!
