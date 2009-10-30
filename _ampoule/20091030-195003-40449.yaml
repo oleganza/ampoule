@@ -3,7 +3,7 @@ title: fulltext search index
 assigned_to: Oleg Andreev
 status: opened
 created_at: 2009-10-30 19:50:03.409535 +01:00
-modified_at: 2009-10-30 20:04:05.845035 +01:00
+modified_at: 2009-10-30 20:05:17.168275 +01:00
 comments: 
 - !ruby/struct:Ampoule::Comment 
   author: Oleg Andreev
