@@ -1,8 +1,8 @@
 Title: use yml files
 Person: Oleg Andreev
-Status: closed
+Status: opened
 Created: Thu Oct 29 19:06:40 +0100 2009
-Modified: Fri Oct 30 11:55:54 +0100 2009
+Modified: Fri Oct 30 11:55:57 +0100 2009
 
 
 
@@ -17,3 +17,9 @@ Date: Fri Oct 30 11:55:54 +0100 2009
 Status: closed
 
 YAML is in stdlib. cool!
+
+@comment
+Author: Oleg Andreev
+Date: Fri Oct 30 11:55:57 +0100 2009
+Status: reopened
+
