@@ -3,7 +3,7 @@ title: ask for remote url and branch if not present
 assigned_to: Oleg Andreev
 status: opened
 created_at: 2009-10-30 19:56:10.924164 +01:00
-modified_at: 2009-10-30 20:04:17.343317 +01:00
+modified_at: 2009-10-30 20:05:39.779822 +01:00
 comments: 
 - !ruby/struct:Ampoule::Comment 
   author: Oleg Andreev
