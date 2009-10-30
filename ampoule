@@ -41,9 +41,17 @@ require 'jcode'
 require 'thread'
 require 'yaml'
 
+module Kernel
+  def const(name, value = nil)
+    if !const_defined?(name)
+      const_set(name, value || name.to_s.downcase)
+    end
+  end
+end
+
 module Ampoule
   
-  VERSION = "0.1" if !defined? Ampoule::VERSION
+  const(:VERSION, "0.1")
   
   module GitHelper
     def git_user_name
@@ -91,27 +99,29 @@ module Ampoule
     end
 
     def tasks
-      $file_buffer.glob("_ampoule/*.amp").map do |path|
-        t = Task.new
-        if path =~ %r{/([^/]+)\.amp$}
-          t.initialize_with_raw_file($1, file_contents_for_path(path))
+      $file_buffer.glob("_ampoule/*.yaml").map do |path|
+        if path =~ %r{/([^/]+)\.yaml$}
+          data = file_contents_for_path(path)
+          t = YAML.load(data)
+          t.id = $1
+          t
         else
           raise "Task id is corrupted? Path: #{path}"
         end
-        t
       end
     end
 
     def task_by_id(id)
-      file_contents_for_name(%{#{id}.amp}).and do |raw_contents|
-        Task.new.with_raw_file(id, raw_contents)
+      file_contents_for_name(%{#{id}.yaml}).and do |data|
+        t = YAML.load(data)
+        t.id = id
+        t
       end
     end
         
     def save_task(task)
       task.mark_as_modified
-      raw_contents = task.to_raw_file
-      set_file_contents_for_name(raw_contents, %{#{task.id}.amp})
+      set_file_contents_for_name(task.to_yaml, %{#{task.id}.yaml})
     end
     
     def current_user_name=(n)
@@ -131,53 +141,61 @@ module Ampoule
   # Model
   #
   
-  class Task
-    attr_accessor :body
-    
-    if !defined? OPENED
-      OPENED = 'opened'
-      CLOSED = 'closed'
+  NonreloadableStructs = {} if !defined?(NonreloadableStructs)
+  class <<self
+    def Model(*attrs)
+      key = attrs.map{|a|a.to_s}.join(",")
+      model = (NonreloadableStructs[key] ||= Struct.new(*attrs))
+      model.send(:include, ModelInstanceMethods)
+      model.send(:extend, ModelClassMethods)
+      model
     end
+  end
   
-    def initialize
-      @headers = {}
-      @body = ""
+  module ModelClassMethods
+    def default(name, &blk)
+      send(:define_method, name) do
+        super.or(&blk)
+      end
+    end
+  end
+  
+  module ModelInstanceMethods
+    def initialize(attrs)
+      attrs.each do |key, value|
+        send("#{key}=", value)
+      end
     end
     
-    def with_raw_file(*args)
-      initialize_with_raw_file(*args)
-      self
-    end
+    # do not export @ivars
+    def to_yaml_properties; []; end
     
-    def initialize_with_raw_file(id, raw_file)
-      @modified_at = nil
-      @id = id
-      @headers, @body = raw_file.headers_and_body
-    end
+    # for to_yaml: access data directly through method sends so that all defaults are used
+    def [](key); send(key); end
+  end
+      
+  class Task < Model(:title, :assigned_to, :status, :created_at, :modified_at, :comments)
     
-    def to_raw_file
-      %{Title: #{title}\n} <<
-      %{Person: #{person}\n} <<
-      %{Status: #{status}\n} <<
-      %{Created: #{created_at}\n} <<
-      %{Modified: #{modified_at}\n} <<
-      %{\n#{body}}
-    end
+    attr_accessor :id
+    
+    const :OPENED
+    const :CLOSED
     
     def id
       @id ||= Time.now.strftime("%Y%m%d-%H%M%S-#{rand(2**16)}")
     end
     
-    def title
-      @headers["Title"].or "Untitled"
-    end
+    default(:title)       { "Untitled" }
+    default(:assigned_to) { "nobody" }
+    default(:created_at)  { Time.now }
+    default(:modified_at) { Time.now }
     
-    def person
-      @headers["Person"].or "nobody"
+    def comments
+      super.or { self.comments = [] }
     end
     
     def status
-      @headers["Status"].or OPENED
+      super == CLOSED ? CLOSED : OPENED
     end
     
     def closed?
@@ -187,19 +205,7 @@ module Ampoule
     def opened?
       !closed?
     end
-    
-    def created_at
-      @headers["Created"].and {|c| Time.parse(c) }.or { Time.now }
-    end
-    
-    def modified_at
-      @modified_at ||= @headers["Modified"].and {|c| Time.parse(c) }.or { Time.now }
-    end
-    
-    def comments
-      Comment.comments_from_raw_file(body)
-    end
-    
+        
     def last_status_line
       last_comment = comments.last
       return "" if !last_comment
@@ -213,74 +219,27 @@ module Ampoule
     end
     
     # mutation methods
-    
-    def title=(t)
-      @headers['Title'] = t
-    end
-    
-    def person=(v)
-      @headers['Person'] = v
-    end
-    
-    def status=(s) 
-      if s == CLOSED || s == OPENED
-        @headers['Status'] = s
-      else
-        raise ArgumentError, "Task status could be either Task::OPENED or Task::CLOSED"
-      end
-    end
-    
+        
     def close
-      @headers['Status'] = CLOSED
+      self.status = CLOSED
     end
     
     def open
-      @headers['Status'] = OPENED
+      self.status = OPENED
     end
     
     def add_comment(comment)
-      body << comment.to_raw_file
+      comments << comment
     end
     
     def mark_as_modified
-      @modified_at = Time.now
+      self.modified_at = Time.now
     end
     
   end
   
-  class Comment
-    attr_accessor :author, :body, :date, :status
-    def initialize(body = "", attrs = {})
-      @author = attrs[:author]
-      @body = body
-      @date = attrs[:date] || Time.now
-      @status = attrs[:status]
-    end
-    
-    def with_headers(hs)
-      @author = hs["Author"].or @author
-      @date   = hs["Date"].and {|d| Time.parse(d)}.or { @date }
-      @status = hs["Status"].or @status
-      self
-    end
-    
-    def to_raw_file
-      buf = %{\n\n@comment\n}
-      buf << %{Author: #{@author.gsub(/[\r\n]/,'')}\n}
-      buf << %{Date: #{@date}\n}
-      buf << %{Status: #{@status}\n} if !@status.blank?
-      buf << %{\n#{@body}}
-      buf
-    end
-    
-    def self.comments_from_raw_file(body)
-      chunks = body.split("\n@comment\n")[1..-1] || []
-      chunks.map do |chunk|
-        hs, body = chunk.headers_and_body
-        self.new(body, {}).with_headers(hs)
-      end
-    end
-    
+  class Comment < Model(:author, :date, :status, :body)
+    default(:date) { Time.now }
   end
   
   
@@ -338,7 +297,7 @@ module Ampoule
       tasks.each do |t|
         (t.closed? ? @closed_tasks : @opened_tasks) << t
       end
-      @opened_tasks = @opened_tasks.sort_by {|t|  t.modified_at.to_i }
+      @opened_tasks = @opened_tasks.sort_by {|t| -t.modified_at.to_i }
       @closed_tasks = @closed_tasks.sort_by {|t| -t.modified_at.to_i }
     end
     
@@ -346,6 +305,9 @@ module Ampoule
       opts = opts.dup
       cls = ["tasks", opts.delete(:class), opts.delete("class")].compact.join(" ")
       table({:border => 0, :class => cls}.merge(opts)) do
+        
+        yield if block_given?
+        
         tasks.each do |task|
           tr do
             td(:class => "task-title textual") do
@@ -357,12 +319,10 @@ module Ampoule
               end
             end
             td(:class => "task-person textual") do
-              h(task.person)
+              h(task.assigned_to)
             end
           end
         end # tasks.each
-        
-        yield if block_given?
         
       end # table
     end
@@ -395,28 +355,26 @@ module Ampoule
         
         form(:action => "/", :method => :POST, :class => 'new-task') do
           tasks_table(opened_tasks, :class => "opened-tasks") do
-            tfoot do
-              tr do
-                td :class => "task-title" do
-                  input(:name => "title", :value => "", :id => :newitemtitle)
+            tr :class => "new-task-row" do
+              td :class => "task-title" do
+                input(:name => "title", :value => "", :id => :newitemtitle)
+              end
+              td :class => "task-person" do
+                value = $last_assigned_person.or { current_user_name }
+                nobr do
+                  input(:name    => :assigned_to, 
+                        :value   => value, 
+                        :id      => :newitemperson,  
+                        :size => 15)
+                  text("&nbsp;")
+                  submit_button(:value => :Assign)
                 end
-                td :class => "task-person" do
-                  value = $last_assigned_person.or { current_user_name }
-                  nobr do
-                    input(:name    => :person, 
-                          :value   => value, 
-                          :id      => :newitemperson,  
-                          :size => 15)
-                    text("&nbsp;")
-                    submit_button(:value => :Assign)
-                  end
-                end # td
-              end # tr
-            end # tfoot
+              end # td
+            end # tr
           end # tasks_table
         end # new task form
         
-        h2 { "Closed tasks" }
+        h2 { "Closed tasks" } if !closed_tasks.empty?
         
         tasks_table(closed_tasks, :class => "closed-tasks")
         
@@ -463,7 +421,7 @@ module Ampoule
             div :class => "save-button" do
               span :class => "assigned-to" do 
                 text("assigned to ")
-                input(:name => "person", :value => task.person)
+                input(:name => "assigned_to", :value => task.assigned_to)
               end
               submit_button(:name => :save, :value => :Save)
             end
@@ -613,7 +571,7 @@ module Ampoule
         apply("td", :font_family => font_family, :font_size => 0.9.em, :padding => "2px 0 5px 0")
         apply("td.textual", :vertical_align => :top)
         apply("td.task-person", :font_size => 0.83.em)
-        apply("tfoot td", :padding_top=>"0.5em")
+        apply(".new-task-row td", :padding_top=>"0.5em")
         
         apply("a", :color => "#333", :text_decoration => "none")
         apply("a:hover", :color => "#000", :text_decoration => "underline")
@@ -654,7 +612,7 @@ module Ampoule
         apply("div.panel", :position => :relative, :width => "70%", :overflow => :hidden, :margin_bottom => "0.5em") 
       
         with(".save-button .assigned-to", :font_size => "0.9em") do
-          apply("input", :font_size => "0.93em", :font_family => font_family, :margin_right => "0.6em")
+          apply("input", :font_size => "1.0em", :font_family => font_family, :margin_right => "0.6em")
         end
       
         apply(%{input[type="submit"]}, :font => font, :width => "5em")
@@ -709,13 +667,11 @@ module Ampoule
     end
     def perform
       title = @query["title"].first.to_s
-      person = @query["person"].first.to_s
-      task = Task.new
-      task.title = title
-      task.person = person
-      task.add_comment(Comment.new("", :author => current_user_name, :status => "opened"))
+      assigned_to = @query["assigned_to"].first.to_s
+      task = Task.new(:title => title, :assigned_to => assigned_to)
+      task.add_comment(Comment.new(:author => current_user_name, :status => "opened"))
       save_task(task)
-      $last_assigned_person = person
+      $last_assigned_person = assigned_to
       "/"
     end
   end
@@ -735,15 +691,15 @@ module Ampoule
       status = nil
       
       title = @query["title"].first.to_s
-      person = @query["person"].first.to_s
+      assigned_to = @query["assigned_to"].first.to_s
 
       @task.title = title
       
-      if @task.person != person
-        status = %{assigned to #{person}}
+      if @task.assigned_to != assigned_to
+        status = %{assigned to #{assigned_to}}
       end
       
-      @task.person = person
+      @task.assigned_to = assigned_to
       
       status_changed = !@query["close"].blank? || !@query["reopen"].blank?
       
@@ -759,7 +715,10 @@ module Ampoule
       
       comment_body = @query["comment"].first.to_s
       if !status.blank? || !comment_body.blank?
-        @task.add_comment(Comment.new(comment_body, :author => current_user_name, :status => status))
+        comment = Comment.new(:author => current_user_name,
+                              :status => status,
+                              :body   => comment_body)
+        @task.add_comment(comment)
       end
       
       save_task(@task)
@@ -808,9 +767,10 @@ module Ampoule
               end
               @buffer = {}
             end
-          
-            `git add _ampoule; git commit -m "synced #{paths.join(', ')}"; git push`
             
+            if !ENV["AMPOULE_NOPUSH"]
+              `git add _ampoule; git commit -m "synced #{paths.join(', ')}"; git push`
+            end
           end
         end
       end
