@@ -15,9 +15,9 @@ assigned_to: !str:WEBrick::HTTPUtils::FormData
   "@name": assigned_to
   "@next_data": 
   "@raw_header": *id002
-status: closed
+status: opened
 created_at: 2009-10-30 16:54:35.212589 +01:00
-modified_at: 2009-10-30 16:54:39.008719 +01:00
+modified_at: 2009-10-30 16:54:43.131407 +01:00
 comments: 
 - !ruby/struct:Ampoule::Comment 
   author: Oleg Andreev
@@ -30,6 +30,19 @@ comments:
   status: closed
   body: !str:WEBrick::HTTPUtils::FormData 
     str: qwe
+    "@filename": 
+    "@header": {}
+
+    "@name": comment
+    "@next_data": 
+    "@raw_header": []
+
+- !ruby/struct:Ampoule::Comment 
+  author: Oleg Andreev
+  date: 2009-10-30 16:54:43.134561 +01:00
+  status: reopened
+  body: !str:WEBrick::HTTPUtils::FormData 
+    str: qwewq
     "@filename": 
     "@header": *id001
     "@name": comment
