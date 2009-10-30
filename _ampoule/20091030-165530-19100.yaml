@@ -1,68 +1,32 @@
 --- !ruby/struct:Ampoule::Task 
-title: !str:WEBrick::HTTPUtils::FormData 
-  str: make CSSBuilder a separate class, not a mixin
-  "@filename": 
-  "@header": &id001 {}
-
-  "@name": title
-  "@next_data": 
-  "@raw_header": &id002 []
-
-assigned_to: !str:WEBrick::HTTPUtils::FormData 
-  str: Oleg Andreev
-  "@filename": 
-  "@header": *id001
-  "@name": assigned_to
-  "@next_data": 
-  "@raw_header": *id002
+title: make CSSBuilder a separate class, not a mixin
+assigned_to: Oleg Andreev
 status: closed
 created_at: 2009-10-30 16:55:30.604556 +01:00
-modified_at: 2009-10-30 19:47:33.993756 +01:00
+modified_at: 2009-10-30 20:04:37.339398 +01:00
 comments: 
 - !ruby/struct:Ampoule::Comment 
   author: Oleg Andreev
   date: 2009-10-30 16:55:30.605092 +01:00
   status: opened
-  body: 
+  body: ""
 - !ruby/struct:Ampoule::Comment 
   author: Oleg Andreev
   date: 2009-10-30 18:18:53.354909 +01:00
   status: 
-  body: !str:WEBrick::HTTPUtils::FormData 
-    str: |
-      test
-
-    "@filename": 
-    "@header": {}
-
-    "@name": comment
-    "@next_data": 
-    "@raw_header": []
+  body: |
+    test
 
 - !ruby/struct:Ampoule::Comment 
   author: Oleg Andreev
   date: 2009-10-30 18:22:36.210833 +01:00
   status: 
-  body: !str:WEBrick::HTTPUtils::FormData 
-    str: |-
+  body: |-
+    tada
       tada
         tada
-          tada
-    "@filename": 
-    "@header": {}
-
-    "@name": comment
-    "@next_data": 
-    "@raw_header": []
-
 - !ruby/struct:Ampoule::Comment 
   author: Oleg Andreev
   date: 2009-10-30 19:47:33.997777 +01:00
   status: closed
-  body: !str:WEBrick::HTTPUtils::FormData 
-    str: done
-    "@filename": 
-    "@header": *id001
-    "@name": comment
-    "@next_data": 
-    "@raw_header": *id002
+  body: done
