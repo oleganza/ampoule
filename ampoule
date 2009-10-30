@@ -129,8 +129,75 @@ module Ampoule
     
   end
   
-  module HTMLBuilder; end
-  module CSSBuilder; end
+  module PresentationBuilders
+    module HTMLBuilder
+      def init_html_builder
+        @_html_stack = []
+      end
+      def text(text)
+        buf = (@_html_stack.last || "") << text
+        buf if @_html_stack.empty?
+      end
+      def tag(name, attrs = {}, &blk)
+        buf = @_html_stack.last || ""
+        buf << %{<#{name}}
+        if attrs
+          rendered_attrs = attrs.inject('') do |ra, (k,v)|
+            v ? (ra << " " << k.to_s << "=" << '"' << CGI::escapeHTML(v.to_s) << '"') : ra
+          end
+          buf << rendered_attrs
+        end
+        if blk
+          @_html_stack.push("")
+          r = yield
+          r = "" if !r.is_a?(String)
+          buf << ">" << @_html_stack.pop << r << "</#{name}>\n"
+        else
+          buf << " />\n"
+        end
+        buf if @_html_stack.empty?
+      end
+      def method_missing(name, *args, &blk)
+        tag(name, *args, &blk)
+      end
+    end
+  
+    module CSSBuilder
+    
+      class ::Numeric
+        def em; "#{self}em"; end
+        def px; "#{self}px"; end
+      end
+    
+      def init_css_builder
+        @css_rules = {}
+        @scope_stack = [];
+        run
+      end
+    
+      def with(*args, &blk)
+        apply(*args, &blk)
+      end
+    
+      def apply(rule, props = nil, &blk)
+        @scope_stack.push(rule.to_s)
+        full_rule = @scope_stack.join(" ")
+        @css_rules[full_rule] = (@css_rules[full_rule] || {}).merge(props) if props
+        if blk
+          yield
+        end
+        @scope_stack.pop
+      end
+    
+      def get
+        @css_rules.inject("") do |css, (k, v)|
+          css << k << " {\n" << (v.inject("") { |props, (p,pv)|
+            props << p.to_s.gsub("_","-") << ": #{pv};\n"
+          }) << "}\n"
+        end
+      end
+    end
+  end # PresentationBuilders
 
   #
   # Model
@@ -281,7 +348,7 @@ module Ampoule
   
   module Layout
     include FileHelper
-    include HTMLBuilder
+    include PresentationBuilders::HTMLBuilder
     attr_accessor :page_title
     def initialize(*args,&blk)
       super(*args,&blk)
@@ -567,7 +634,7 @@ module Ampoule
   #
   
   class CSSController < Controller
-    include CSSBuilder
+    include PresentationBuilders::CSSBuilder
     def initialize(*args, &blk)
       super(*args, &blk)
       init_css_builder
@@ -756,77 +823,7 @@ module Ampoule
     end
   end
   
-  #
-  # Content Builders
-  #
   
-  module HTMLBuilder
-    def init_html_builder
-      @_html_stack = []
-    end
-    def text(text)
-      buf = (@_html_stack.last || "") << text
-      buf if @_html_stack.empty?
-    end
-    def tag(name, attrs = {}, &blk)
-      buf = @_html_stack.last || ""
-      buf << %{<#{name}}
-      if attrs
-        rendered_attrs = attrs.inject('') do |ra, (k,v)|
-          v ? (ra << " " << k.to_s << "=" << '"' << CGI::escapeHTML(v.to_s) << '"') : ra
-        end
-        buf << rendered_attrs
-      end
-      if blk
-        @_html_stack.push("")
-        r = yield
-        r = "" if !r.is_a?(String)
-        buf << ">" << @_html_stack.pop << r << "</#{name}>\n"
-      else
-        buf << " />\n"
-      end
-      buf if @_html_stack.empty?
-    end
-    def method_missing(name, *args, &blk)
-      tag(name, *args, &blk)
-    end
-  end
-  
-  module CSSBuilder
-    
-    class ::Numeric
-      def em; "#{self}em"; end
-      def px; "#{self}px"; end
-    end
-    
-    def init_css_builder
-      @css_rules = {}
-      @scope_stack = [];
-      run
-    end
-    
-    def with(*args, &blk)
-      apply(*args, &blk)
-    end
-    
-    def apply(rule, props = nil, &blk)
-      @scope_stack.push(rule.to_s)
-      full_rule = @scope_stack.join(" ")
-      @css_rules[full_rule] = (@css_rules[full_rule] || {}).merge(props) if props
-      if blk
-        yield
-      end
-      @scope_stack.pop
-    end
-    
-    def get
-      @css_rules.inject("") do |css, (k, v)|
-        css << k << " {\n" << (v.inject("") { |props, (p,pv)|
-          props << p.to_s.gsub("_","-") << ": #{pv};\n"
-        }) << "}\n"
-      end
-    end
-  end
   
   #
   # Server config
