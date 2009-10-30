@@ -1,0 +1,12 @@
+--- !ruby/struct:Ampoule::Task 
+title: test
+assigned_to: Oleg Andreev
+status: opened
+created_at: 2009-10-30 20:09:33.051805 +01:00
+modified_at: 2009-10-30 20:09:33.050913 +01:00
+comments: 
+- !ruby/struct:Ampoule::Comment 
+  author: Oleg Andreev
+  date: 2009-10-30 20:09:33.053179 +01:00
+  status: opened
+  body: ""
