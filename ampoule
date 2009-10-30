@@ -39,6 +39,7 @@ require 'webrick'
 require 'CGI'
 require 'jcode'
 require 'thread'
+require 'yaml'
 
 module Ampoule
   
