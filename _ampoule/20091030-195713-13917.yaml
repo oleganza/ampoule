@@ -1,23 +1,9 @@
 --- !ruby/struct:Ampoule::Task 
-title: !str:WEBrick::HTTPUtils::FormData 
-  str: ampoule inside a regular project repository
-  "@filename": 
-  "@header": &id001 {}
-
-  "@name": title
-  "@next_data": 
-  "@raw_header": &id002 []
-
-assigned_to: !str:WEBrick::HTTPUtils::FormData 
-  str: Oleg Andreev
-  "@filename": 
-  "@header": *id001
-  "@name": assigned_to
-  "@next_data": 
-  "@raw_header": *id002
+title: ampoule inside a regular project repository
+assigned_to: Oleg Andreev
 status: opened
 created_at: 2009-10-30 19:57:13.513260 +01:00
-modified_at: 2009-10-30 19:57:19.987052 +01:00
+modified_at: 2009-10-30 20:02:33.079833 +01:00
 comments: 
 - !ruby/struct:Ampoule::Comment 
   author: Oleg Andreev
@@ -39,7 +25,9 @@ comments:
       2) pull: fetch the special branch "ampoule-tasks"; then merge it to the local ampoule-tasks branch
 
     "@filename": 
-    "@header": *id001
+    "@header": {}
+
     "@name": comment
     "@next_data": 
-    "@raw_header": *id002
+    "@raw_header": []
+
