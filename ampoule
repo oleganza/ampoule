@@ -34,8 +34,11 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 
+$KCODE = 'UTF8'
 require 'webrick'
 require 'CGI'
+require 'jcode'
+require 'thread'
 
 module Ampoule
   
@@ -557,10 +560,10 @@ module Ampoule
     
     def to_short_line
       max_len = 40
-      if (strip+".").gsub("\n"," ") =~ %r{\A(.{10,#{max_len}}\S\.)}
+      if (strip+".").gsub("\n"," ") =~ %r{\A(.{10,#{max_len}}\S\.)}u
         $1
       elsif self.size > max_len
-        self[0,max_len] + "..."
+        split(//u)[0,max_len].join + "..."
       else
         self
       end
@@ -774,7 +777,6 @@ module Ampoule
   # Helpers
   #  
   
-  require 'thread'
   class FileSyncBuffer
     def initialize
       @buffer = {} # path => content
