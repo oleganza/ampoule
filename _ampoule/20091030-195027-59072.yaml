@@ -1,26 +1,12 @@
 --- !ruby/struct:Ampoule::Task 
-title: !str:WEBrick::HTTPUtils::FormData 
-  str: browse per-page history
-  "@filename": 
-  "@header": &id001 {}
-
-  "@name": title
-  "@next_data": 
-  "@raw_header": &id002 []
-
-assigned_to: !str:WEBrick::HTTPUtils::FormData 
-  str: Oleg Andreev
-  "@filename": 
-  "@header": *id001
-  "@name": assigned_to
-  "@next_data": 
-  "@raw_header": *id002
+title: browse per-page history
+assigned_to: Oleg Andreev
 status: opened
 created_at: 2009-10-30 19:50:27.440946 +01:00
-modified_at: 2009-10-30 19:50:27.422479 +01:00
+modified_at: 2009-10-30 20:04:41.059303 +01:00
 comments: 
 - !ruby/struct:Ampoule::Comment 
   author: Oleg Andreev
   date: 2009-10-30 19:50:27.442205 +01:00
   status: opened
-  body: 
+  body: ""
