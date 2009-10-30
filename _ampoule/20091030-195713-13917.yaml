@@ -3,31 +3,23 @@ title: ampoule inside a regular project repository
 assigned_to: Oleg Andreev
 status: opened
 created_at: 2009-10-30 19:57:13.513260 +01:00
-modified_at: 2009-10-30 20:02:33.079833 +01:00
+modified_at: 2009-10-30 20:03:03.098357 +01:00
 comments: 
 - !ruby/struct:Ampoule::Comment 
   author: Oleg Andreev
   date: 2009-10-30 19:57:13.513842 +01:00
   status: opened
-  body: 
+  body: ""
 - !ruby/struct:Ampoule::Comment 
   author: Oleg Andreev
   date: 2009-10-30 19:57:19.990164 +01:00
   status: 
-  body: !str:WEBrick::HTTPUtils::FormData 
-    str: |
-      The interesting case is to store tasks inside the regular repository (in a detached branch, probably). 
-      
-      The working tree for this branch should be located in .git/ampoule/
-      
-      1) init: to avoid full repository clone into .git/ampoule (which consumes disk space and cpu time), we should create a shallow clone of the current repository and update config
-      
-      2) pull: fetch the special branch "ampoule-tasks"; then merge it to the local ampoule-tasks branch
-
-    "@filename": 
-    "@header": {}
-
-    "@name": comment
-    "@next_data": 
-    "@raw_header": []
+  body: |
+    The interesting case is to store tasks inside the regular repository (in a detached branch, probably). 
+    
+    The working tree for this branch should be located in .git/ampoule/
+    
+    1) init: to avoid full repository clone into .git/ampoule (which consumes disk space and cpu time), we should create a shallow clone of the current repository and update config
+    
+    2) pull: fetch the special branch "ampoule-tasks"; then merge it to the local ampoule-tasks branch
 
