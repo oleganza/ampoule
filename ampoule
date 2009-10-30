@@ -167,11 +167,13 @@ module Ampoule
         tag(name, *args, &blk)
       end
       
-      def delegate(method = nil)
-        if method
-          class <<self; self; end.send(:define_method, method) { @delegate.send(method) }
-        else
+      def delegate(*methods)
+        if methods.empty?
           @delegate
+        else
+          methods.each do |m|
+            class <<self; self; end.send(:define_method, m) { @delegate.send(m) }
+          end
         end
       end
       
@@ -428,8 +430,7 @@ module Ampoule
     def layout(attrs_for_body = {}, &blk)
       PresentationBuilders::XMLBuilder.new(self) do
         
-        delegate :project_title
-        delegate :page_title
+        delegate :project_title, :page_title, :current_user_name
         
         helper :tasks_table do |tasks, opts, &blk|
           opts = opts.dup
@@ -560,8 +561,6 @@ module Ampoule
       
       
       layout :focus => :newitemtitle do
-        
-        delegate :current_user_name
         
         form :action => "/title", :method => "POST" do
           h1(:class => 'index-title') { input(:value => page_title, :name => :title) }
