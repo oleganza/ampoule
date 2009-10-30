@@ -101,10 +101,7 @@ module Ampoule
     def tasks
       $file_buffer.glob("_ampoule/*.yaml").map do |path|
         if path =~ %r{/([^/]+)\.yaml$}
-          data = file_contents_for_path(path)
-          t = YAML.load(data)
-          t.id = $1
-          t
+          Task.task_with_id_and_yaml($1, file_contents_for_path(path))
         else
           raise "Task id is corrupted? Path: #{path}"
         end
@@ -113,9 +110,7 @@ module Ampoule
 
     def task_by_id(id)
       file_contents_for_name(%{#{id}.yaml}).and do |data|
-        t = YAML.load(data)
-        t.id = id
-        t
+        Task.task_with_id_and_yaml(id, data)
       end
     end
         
@@ -175,11 +170,16 @@ module Ampoule
   end
       
   class Task < Model(:title, :assigned_to, :status, :created_at, :modified_at, :comments)
-    
     attr_accessor :id
     
     const :OPENED
     const :CLOSED
+    
+    def self.task_with_id_and_yaml(id, data)
+      t = YAML.load(data)
+      t.id = id
+      t
+    end
     
     def id
       @id ||= Time.now.strftime("%Y%m%d-%H%M%S-#{rand(2**16)}")
@@ -205,7 +205,7 @@ module Ampoule
     def opened?
       !closed?
     end
-        
+    
     def last_status_line
       last_comment = comments.last
       return "" if !last_comment
@@ -220,13 +220,8 @@ module Ampoule
     
     # mutation methods
         
-    def close
-      self.status = CLOSED
-    end
-    
-    def open
-      self.status = OPENED
-    end
+    def close; self.status = CLOSED; end
+    def open;  self.status = OPENED; end
     
     def add_comment(comment)
       comments << comment
@@ -235,7 +230,6 @@ module Ampoule
     def mark_as_modified
       self.modified_at = Time.now
     end
-    
   end
   
   class Comment < Model(:author, :date, :status, :body)
@@ -244,15 +238,53 @@ module Ampoule
   
   
   #
-  # GET
+  # Controllers
   #
+
+  class Controller
+    attr_accessor :request, :response
+    def initialize(request, response)
+      self.request = request
+      self.response = response
+      response.status = 200
+      response['Content-Type'] = "text/html"
+    end
+    
+    def param(param, default = nil)
+      request.query[param.to_s] || default
+    end
+    
+    def get!
+      response.body = get.to_s
+    end
+    
+    def get
+      ""
+    end
+    
+    def post!
+      post
+      if @redirect_to
+        response.status = 301
+        response['Location'] = @redirect_to
+      end
+    end
+    
+    def post
+      redirect_to "/"
+    end
+    
+    def redirect_to(uri)
+      @redirect_to = uri
+    end
+  end
   
-  class Layout
+  module Layout
     include FileHelper
     include HTMLBuilder
     attr_accessor :page_title
-    def initialize
-      super
+    def initialize(*args,&blk)
+      super(*args,&blk)
       init_html_builder
       @page_title = project_title
     end
@@ -274,11 +306,7 @@ module Ampoule
         end
       end # html
     end # layout
-    
-    def read(attrs_for_body = {}, &blk)
-      layout(attrs_for_body, &blk)
-    end
-    
+        
     def submit_button(attrs = {}, &blk)
       input({:type => :submit, 
              :name => :submit, 
@@ -288,18 +316,8 @@ module Ampoule
     
   end # Layout
   
-  class Index < Layout
-    attr_accessor :opened_tasks, :closed_tasks
-    def initialize(query)
-      super()
-      @opened_tasks = []
-      @closed_tasks = []
-      tasks.each do |t|
-        (t.closed? ? @closed_tasks : @opened_tasks) << t
-      end
-      @opened_tasks = @opened_tasks.sort_by {|t| -t.modified_at.to_i }
-      @closed_tasks = @closed_tasks.sort_by {|t| -t.modified_at.to_i }
-    end
+  class TasksController < Controller
+    include Layout
     
     def tasks_table(tasks, opts = {}, &blk)
       opts = opts.dup
@@ -327,7 +345,7 @@ module Ampoule
       end # table
     end
     
-    def read
+    def get
       if current_user_name.blank?
         user_name_prompt
       else
@@ -348,6 +366,16 @@ module Ampoule
     end
     
     def index
+      
+      opened_tasks = []
+      closed_tasks = []
+      tasks.each do |t|
+        (t.closed? ? closed_tasks : opened_tasks) << t
+      end
+      opened_tasks = opened_tasks.sort_by {|t| -t.modified_at.to_i }
+      closed_tasks = closed_tasks.sort_by {|t| -t.modified_at.to_i }
+      
+      
       layout :focus => :newitemtitle do
         form :action => "/title", :method => "POST" do
           h1(:class => 'index-title') { input(:value => page_title, :name => :title) }
@@ -379,19 +407,32 @@ module Ampoule
         tasks_table(closed_tasks, :class => "closed-tasks")
         
       end # layout
-    end # read
-  end
-  
-  class Page < Layout
-    attr_accessor :task
-    def initialize(id)
-      super()
-      @task = task_by_id(id)
-      self.page_title = @task.title + " (#{project_title})"
+    end # index
+    
+    def post
+      title = param(:title)
+      assigned_to = param(:assigned_to)
+      task = Task.new(:title => title, :assigned_to => assigned_to)
+      task.add_comment(Comment.new(:author => current_user_name, :status => "opened"))
+      save_task(task)
+      $last_assigned_person = assigned_to
+      redirect_to "/"
     end
     
-    def read
-      super :focus => :comment do
+  end # TasksController
+  
+  class TaskController < Controller
+    include Layout
+    include FileHelper
+    
+    def task
+      @task ||= task_by_id(request.path[1..-1])
+    end
+    
+    def get
+      self.page_title = task.title + " (#{project_title})"
+      
+      layout :focus => :comment do
         
         small(:style => %{position:absolute; top:1em;}) { a(:href => "/") { project_title + " index" } }
         
@@ -473,67 +514,62 @@ module Ampoule
       h(text.strip).gsub(/\n/, "<br/>")
     end
     
-  end # Page
-  
-  
-  #
-  # Core ext
-  #
-  
-  class ::Time
-    def to_relative_string
-      diff = (Time.now - self).to_i
-      return "now" if diff < 2
-      return "#{diff} seconds ago" if diff < 50
-      return "one minute ago" if diff < 60*2
-      return "#{diff/60} minutes ago" if diff < 60*60
-      return "an hour ago" if diff/60/60 <= 1
-      return "#{diff/60/60} hours ago" if diff < 60*60*18
-      return "yesterday" if diff/60/60/24 <= 1
-      return "#{diff/60/60/24} days ago" if diff < 60*60*24*7
-      return strftime("%B %d") if diff < 60*60*24*30*3
-      return strftime("%B %d, %Y")
+    def post
+      current_person = param(:current_person)
+      if current_person != current_user_name && !current_person.blank?
+        self.current_user_name = current_person # remember new value
+      end
+      
+      task.title = param(:title)
+      assigned_to = param(:assigned_to)
+      
+      status = nil
+      if task.assigned_to != assigned_to
+        status = %{assigned to #{assigned_to}}
+      end
+      
+      task.assigned_to = assigned_to
+      
+      status_changed = !param(:close).blank? || !param(:reopen).blank?
+      
+      if status_changed
+        if param(:close).blank?
+          status ||= "reopened"
+          task.open
+        else
+          status ||= "closed"
+          task.close
+        end
+      end
+      
+      comment_body = param(:comment)
+      if !status.blank? || !comment_body.blank?
+        comment = Comment.new(:author => current_user_name,
+                              :status => status,
+                              :body   => comment_body)
+        task.add_comment(comment)
+      end
+      
+      save_task(task)
+      
+      if status_changed
+        redirect_to "/"
+      else
+        redirect_to  "/#{task.id}"
+      end
     end
     
-    def to_relative_string_if_recent
-      if Time.now - self < 3600*20
-        to_relative_string
-      else
-        ""
-      end
-    end
-  end
+  end # TaskController
   
-  class ::String
-    def headers_and_body
-      headers, body = strip.split("\n\n", 2)
-      headers = headers.strip.split("\n").inject({}) do |h, line|
-        name, value = line.strip.split(/:\s*/,2)
-        h[name] = value
-        h
-      end
-      [headers, body || ""]
-    end
-    
-    def to_short_line
-      max_len = 40
-      if gsub("\n"," ") =~ %r{\A(.{10,#{max_len}}\S[\.\?\!\(\[\{]\s)}u
-        $1.gsub(/\s*[\(\[\{]\Z/,"")
-      elsif self.size > max_len
-        split(//u)[0,max_len].join.gsub(/\s*[\(\[\{]\Z/,"") + "..."
-      else
-        self.gsub(/\s*[\(\[\{]\Z/,"")
-      end
-    end
-  end
   
   #
   # CSS
   #
   
-  class CSS
+  class CSSController < Controller
     include CSSBuilder
-    def initialize
+    def initialize(*args, &blk)
+      super(*args, &blk)
       init_css_builder
     end
     def run
@@ -632,104 +668,22 @@ module Ampoule
     end
   end
   
-  #
-  # POST
-  #
-  
-  class TitleUpdate
+  class TitleController < Controller
     include FileHelper
-    def initialize(query)
-      @query = query
-    end
-    def perform
-      new_title = @query["title"].first.to_s
-      set_project_title(new_title)
-      "/"
+    def post
+      set_project_title(param(:title))
+      redirect_to "/"
     end
   end
   
-  class UsernameUpdate
+  class UsernameController < Controller
     include FileHelper
-    def initialize(query)
-      @query = query
-    end
-    def perform
-      name = @query["name"].first.to_s
-      self.current_user_name = name
-      "/"
+    def post
+      self.current_user_name = param(:name)
+      redirect_to "/"
     end
   end
   
-  class TaskCreate
-    include FileHelper
-    def initialize(query)
-      @query = query
-    end
-    def perform
-      title = @query["title"].first.to_s
-      assigned_to = @query["assigned_to"].first.to_s
-      task = Task.new(:title => title, :assigned_to => assigned_to)
-      task.add_comment(Comment.new(:author => current_user_name, :status => "opened"))
-      save_task(task)
-      $last_assigned_person = assigned_to
-      "/"
-    end
-  end
-  
-  class TaskUpdate
-    include FileHelper
-    def initialize(id, query)
-      @task = task_by_id(id)
-      @query = query
-    end
-    def perform
-      current_person = @query["current_person"].first.to_s
-      if current_person != current_user_name && !current_person.blank?
-        self.current_user_name = current_person # remember new value
-      end
-      
-      status = nil
-      
-      title = @query["title"].first.to_s
-      assigned_to = @query["assigned_to"].first.to_s
-
-      @task.title = title
-      
-      if @task.assigned_to != assigned_to
-        status = %{assigned to #{assigned_to}}
-      end
-      
-      @task.assigned_to = assigned_to
-      
-      status_changed = !@query["close"].blank? || !@query["reopen"].blank?
-      
-      if status_changed
-        if @query["close"].blank? 
-          status ||= "reopened"
-          @task.open
-        else
-          status ||= "closed"
-          @task.close
-        end
-      end
-      
-      comment_body = @query["comment"].first.to_s
-      if !status.blank? || !comment_body.blank?
-        comment = Comment.new(:author => current_user_name,
-                              :status => status,
-                              :body   => comment_body)
-        @task.add_comment(comment)
-      end
-      
-      save_task(@task)
-      
-      if status_changed
-        "/" # redirect to index if status was changed
-      else
-        "/#{@task.id}"
-      end
-    end
-  end
   
   #
   # Helpers
@@ -865,7 +819,7 @@ module Ampoule
       @scope_stack.pop
     end
     
-    def read
+    def get
       @css_rules.inject("") do |css, (k, v)|
         css << k << " {\n" << (v.inject("") { |props, (p,pv)|
           props << p.to_s.gsub("_","-") << ": #{pv};\n"
@@ -890,8 +844,20 @@ module Ampoule
         puts "Ampoule::Server: trying to bind to port #{@port}..."
         retry
       end
-      @server.mount "/", WebrickHandle
+      @server.mount "/", WebrickHandle, self
     end
+    
+    def controller_class_for_request(request)
+      case request.path
+      when "/":            TasksController
+      when "/title":       TitleController
+      when "/username":    UsernameController
+      when "/style.css":   CSSController
+      when "/favicon.ico": Controller
+      else                 TaskController
+      end
+    end
+    
     def start
       Thread.new { sleep(1); system(%{open http://localhost:#{@port}/}) }
       trap("INT") { @server.shutdown; $file_buffer.stop }
@@ -900,71 +866,101 @@ module Ampoule
   end
   
   class WebrickHandle < WEBrick::HTTPServlet::AbstractServlet
-    def initialize(server, *args)
-      super(server)
+    def initialize(_server, router)
+      @router = router
+      super(_server)
     end
-    def do_GET(request, response)
+        
+    def controller_for_request_and_response(request, response)
+      @router.controller_class_for_request(request).new(request, response)
+    end
+    
+    def before
       load(__FILE__) if ENV['AMPOULE_AUTORELOAD']
-      content_type = "text/html"
-      if request.path == "/"
-        body = Index.new(request.query).read
-      elsif request.path == "/style.css"
-        body = CSS.new.read
-        content_type = "text/css"
-      elsif request.path == "/favicon.ico"
-        body = ""
-        content_type = "application/octet-stream"
-      else
-        body = Page.new(request.path.to_s[1..-1]).read
-      end
-      response.status = 200
-      response['Content-Type'] = content_type
-      response.body = body
+    end
+    
+    def do_GET(request, response)
+      before
+      controller_for_request_and_response(request, response).get!
     end
     
     def do_POST(request, response)
-      # TODO: do the job, get redirect url and set a header to redirect there
-      content_type = "text/html"
-      if request.path == "/title"
-        location = TitleUpdate.new(CGI::parse(request.body)).perform
-      elsif request.path == "/username"
-        location = UsernameUpdate.new(CGI::parse(request.body)).perform
-      elsif request.path == "/"
-        location = TaskCreate.new(CGI::parse(request.body)).perform
-      else
-        location = TaskUpdate.new(request.path.to_s[1..-1], CGI::parse(request.body)).perform
-      end
-      response.status = 301
-      response['Location'] = location
-      response['Content-Type'] = "text/html"
+      before
+      controller_for_request_and_response(request, response).post!
     end
   end
 
-  class ::Object
-    def blank?; false end
-    def or(default = nil)
-      blank? ? (block_given? ? yield : default) : self 
+  module CoreExtensions
+    class ::Time
+      def to_relative_string
+        diff = (Time.now - self).to_i
+        return "now" if diff < 2
+        return "#{diff} seconds ago" if diff < 50
+        return "one minute ago" if diff < 60*2
+        return "#{diff/60} minutes ago" if diff < 60*60
+        return "an hour ago" if diff/60/60 <= 1
+        return "#{diff/60/60} hours ago" if diff < 60*60*18
+        return "yesterday" if diff/60/60/24 <= 1
+        return "#{diff/60/60/24} days ago" if diff < 60*60*24*7
+        return strftime("%B %d") if diff < 60*60*24*30*3
+        return strftime("%B %d, %Y")
+      end
+      def to_relative_string_if_recent
+        if Time.now - self < 3600*20
+          to_relative_string
+        else
+          ""
+        end
+      end
     end
-    def and
-      blank? ? nil : yield(self)
-    end
-  end
-  class ::FalseClass
-    def blank?; true end
-  end
-  class ::NilClass
-    def blank?; true end
-  end
-  class ::Array
-    def blank?; compact.empty? end
-  end
-  class ::String
-    def blank?; strip.empty? end
-  end
-  class ::Hash
-    def blank?; values.empty? end
-  end
   
+    class ::String
+      def headers_and_body
+        headers, body = strip.split("\n\n", 2)
+        headers = headers.strip.split("\n").inject({}) do |h, line|
+          name, value = line.strip.split(/:\s*/,2)
+          h[name] = value
+          h
+        end
+        [headers, body || ""]
+      end
+      def to_short_line
+        max_len = 40
+        if gsub("\n"," ") =~ %r{\A(.{10,#{max_len}}\S[\.\?\!\(\[\{]\s)}u
+          $1.gsub(/\s*[\(\[\{]\Z/,"")
+        elsif self.size > max_len
+          split(//u)[0,max_len].join.gsub(/\s*[\(\[\{]\Z/,"") + "..."
+        else
+          self.gsub(/\s*[\(\[\{]\Z/,"")
+        end
+      end
+    end
+
+    class ::Object
+      def blank?; false end
+      def or(default = nil)
+        blank? ? (block_given? ? yield : default) : self 
+      end
+      def and
+        blank? ? nil : yield(self)
+      end
+    end
+    class ::FalseClass
+      def blank?; true end
+    end
+    class ::NilClass
+      def blank?; true end
+    end
+    class ::Array
+      def blank?; compact.empty? end
+    end
+    class ::String
+      def blank?; strip.empty? end
+    end
+    class ::Hash
+      def blank?; values.empty? end
+    end
+  end # CoreExtensions
 end
 
 if $0 == __FILE__
