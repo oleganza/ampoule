@@ -3,7 +3,7 @@ title: "priorities by time: \"today\", \"this week\", \"later\", \"never\""
 assigned_to: Oleg Andreev
 status: opened
 created_at: 2009-10-30 19:54:26.820561 +01:00
-modified_at: 2009-10-31 14:39:01.596683 +01:00
+modified_at: 2009-10-31 16:01:48.066925 +01:00
 comments: 
 - !ruby/struct:Ampoule::Comment 
   author: Oleg Andreev
@@ -41,10 +41,4 @@ comments:
     - create a nosql database
     - invent a new garbage collector
     - jump with a parachute
-    
-    
-    
-    
-    
-    
 
