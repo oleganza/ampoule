@@ -34,6 +34,7 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 
+# We use only stdlib here to avoid infinite gem requirements
 $KCODE = 'UTF8'
 require 'webrick'
 require 'CGI'
@@ -153,6 +154,7 @@ module Ampoule
 
       def tag(name, attrs = {}, &blk)
         @buffer << %{<#{name}} << (attrs || {}).inject('') do |ra, (k,v)|
+          v = k if v == true
           v ? (ra << " " << k.to_s << "=" << '"' << CGI::escapeHTML(v.to_s) << '"') : ra
         end
         if blk
@@ -248,11 +250,7 @@ module Ampoule
       end
 
       def method_missing(name, *args, &blk)
-        if blk # it is a selector
-          _selector(name, *args, &blk)
-        else # it is a property
-          _property(name, *args)
-        end
+        blk ? _selector(name, *args, &blk) : _property(name, *args)
       end
 
       def to_s
@@ -285,7 +283,7 @@ module Ampoule
   module ModelClassMethods
     def default(name, &blk)
       send(:define_method, name) do
-        super.or(&blk)
+        super.or(instance_eval(&blk))
       end
     end
   end
@@ -304,7 +302,7 @@ module Ampoule
     def [](key); send(key); end
   end
       
-  class Task < Model(:title, :assigned_to, :status, :created_at, :modified_at, :comments)
+  class Task < Model(:title, :priority, :assigned_to, :status, :created_at, :modified_at, :comments)
     attr_accessor :id
     
     const :OPENED
@@ -316,11 +314,16 @@ module Ampoule
       t
     end
     
+    const :PRIORITIES, %w[today this\ week later never]
+    
+    def priorities; PRIORITIES; end
+    
     def id
       @id ||= Time.now.strftime("%Y%m%d-%H%M%S-#{rand(2**16).to_s.rjust(5,'0')}")
     end
     
     default(:title)       { "Untitled" }
+    default(:priority)    { priorities.first }
     default(:assigned_to) { "nobody" }
     default(:created_at)  { Time.now }
     default(:modified_at) { Time.now }
@@ -444,7 +447,9 @@ module Ampoule
                 td(:class => "task-title textual") do
                   a(:href => "/#{task.id}"){ h(task.title) }
                   small do
-                    status = task.last_status_line.gsub(/assigned to .*? (by .*)/i, "reassigned \\1").gsub(/([^\.])\.\Z/,"\\1")
+                    status = task.last_status_line.
+                                gsub(/assigned to .*? (by .*)/i, "reassigned \\1").
+                                gsub(/([^\.])\.\Z/,"\\1")
                     puts(h(status) + " ")
                     nobr { task.modified_at.to_relative_string_if_recent.and{|s| "(#{s})" }.to_s} 
                   end
@@ -501,9 +506,19 @@ module Ampoule
           input({:type => :submit, 
                  :name => :submit, 
                  :value => :Ok, 
-                 :disabled => (attrs.delete(:disabled) ? :disabled : nil)}.merge(attrs), &blk)
+                 :disabled => !!attrs.delete(:disabled)}.merge(attrs), &blk)
         end
         
+        helper :select_tag do |attrs|
+          value = attrs.delete(:value)
+          options = (attrs.delete(:options)||[]) | [value].or([])
+          select(attrs) do
+            options.each do |opt|
+              option(:selected => (opt == value)) { opt }
+            end
+            nil
+          end
+        end
         
         html do
           head do
@@ -647,16 +662,14 @@ module Ampoule
           textarea(:name => :comment, :id => :comment, :rows => 10, :cols => 80) { }
           
           div :class => "buttons panel" do
-            div :class => "save-button" do
-              span :class => "assigned-to" do 
-                puts("assigned to ")
-                input(:name => "assigned_to", :value => task.assigned_to)
-              end
+            div :class => "save-buttons" do
+              puts("assigned to ")
+              input(:name => "assigned_to", :value => task.assigned_to)
+              select_tag(:name => :priority, :value => task.priority, :options => task.priorities)
               submit_button(:name => :save, :value => :Save)
             end
             div :class => "status-buttons" do
               submit_button(:name => :close, :value => :Close, :disabled => task.closed?)
-              print("&nbsp;")
               submit_button(:name => :reopen, :value => :Reopen, :disabled => task.opened?)
             end
           end
@@ -672,6 +685,7 @@ module Ampoule
       end
       
       task.title = param(:title)
+      task.priority = param(:priority)
       assigned_to = param(:assigned_to)
       
       status = nil
@@ -824,23 +838,27 @@ module Ampoule
             width "70%"
             overflow :hidden
             margin_bottom 0.5.em
+            input ", select" do 
+              font :size => "100%", :family => app_font_family
+            end
           end
 
-          _ ".save-button .assigned-to" do
-            font_size 0.9.em
-            input do 
-              font :size => 1.0.em, :family => app_font_family
-              margin_right 0.6.em 
-            end
+          div ".status-buttons" do
+            float :left
+            input  { margin_right 0.6.em }
+            select { margin_right 0.6.em }
+          end
+          
+          div ".save-buttons" do
+            float :right
+            input  { margin_left 0.6.em }
+            select { margin_left 0.6.em }
           end
 
           input '[type="submit"]' do
             font :family => app_font_family, :size => 1.em
             width 5.em
           end
-
-          div(".status-buttons") { float :left }
-          div(".save-button")    { float :right }
         end
 
         _ ".comments" do
@@ -865,102 +883,7 @@ module Ampoule
         
       end # builder
     end # get
-    
-    def run
-      font_family = "Helvetica, sans-serif"
-      font = "100% #{font_family}"
-      apply(:body, 
-        :font => font, 
-        :color => "#333",
-        :margin => "3em 1em 1em 4em")
-        
-      apply(:h1, :font_size => 1.3.em) do
-        apply(:input,
-          :font => font,
-          :width => "70%"
-        )
-      end
-      
-      with("h1.index-title") do
-        apply(:input,
-          :border => :none,
-          :width => "100%",
-          :outline_style => :none
-        )
-      end
-      
-      apply(:h2, :font_size => 1.1.em, :font_weight => :normal, :margin => "1.8em 0 0.5em 0", :color => "#666") 
-      
-      apply("a", :color => "#333")
-      apply("a:hover", :color => "#000")
-
-      
-      apply(".new-task input", :font_family => font_family, :font_size => 1.0.em, :margin_left => -3.px, :padding_left => 0.px)
-      apply(".empty", :color => "#999")
-      apply(".tasks", :width=>"100%", :margin_left => "-1px") do
-        apply("td", :font_family => font_family, :font_size => 0.9.em, :padding => "2px 0 5px 0")
-        apply("td.textual", :vertical_align => :top)
-        apply("td.task-person", :font_size => 0.83.em)
-        apply(".new-task-row td", :padding_top=>"0.5em")
-        
-        apply("a", :color => "#333", :text_decoration => "none")
-        apply("a:hover", :color => "#000", :text_decoration => "underline")
-        
-        apply(".task-title", :width=>"70%", :padding_right => "7px") do
-          apply("input", :width=>"100%")
-        end
-        
-        apply("small", :color => "#999", :font_size => "0.75em", :padding_left => "0.4em") 
-        
-      end
-      
-      apply(".tasks.closed-tasks") do
-        apply("td", :color => "#666")
-        apply("a", :color => "#666")
-        apply("a:hover", :color => "#333")
-      end
-      
-      with(".edit-task") do      
-        apply("textarea",
-          :padding => 0.4.em,
-          :margin => "0.4em 0 0.6em 0",
-          :font_size => 0.9.em,
-          :font_family => font_family,
-          :word_spacing => :normal,
-          :width => "70%"
-        )
-        
-        apply("input.current-person", 
-          :border => :none,
-          :padding => 0,
-          :margin => 0,
-          :outline_style => :none,
-          :font_family => font_family,
-          :font_size => 0.8.em,
-          :font_weight => "bold")
-        
-        apply("div.panel", :position => :relative, :width => "70%", :overflow => :hidden, :margin_bottom => "0.5em") 
-      
-        with(".save-button .assigned-to", :font_size => "0.9em") do
-          apply("input", :font_size => "1.0em", :font_family => font_family, :margin_right => "0.6em")
-        end
-      
-        apply(%{input[type="submit"]}, :font => font, :width => "5em")
-        
-        
-        apply("div.status-buttons", :float => "left") 
-        apply("div.save-button", :float => "right") 
-      end
-      
-      with(".comments") do
-        apply("label", :font_size => 0.8.em, :font_weight => "bold", :display => "block", :margin => "2em 0 0.6em 0") do
-          apply("small", :font_size => 1.em, :color => "#999", :padding_left => 0.9.em, :font_weight => "normal")
-        end
-        apply("p", :font_size => 0.9.em, :margin => "0.3em 0 0.6em 0", :width => "70%", :line_height => "130%")
-      end
-      
-    end
-  end
+  end # CSSController
   
   class TitleController < Controller
     include FileHelper
@@ -1179,7 +1102,13 @@ module Ampoule
 end
 
 if $0 == __FILE__
-  if !defined?(Ampoule::ServerInstance)
+  if ARGV.shift == "-i"
+    require 'irb'
+    include Ampoule
+    $file_buffer = FileSyncBuffer.new
+    include FileHelper
+    IRB.start
+  elsif !defined?(Ampoule::ServerInstance)
     Ampoule::ServerInstance = Ampoule::Server.new(:port => 8000)
     Ampoule::ServerInstance.start
   end
