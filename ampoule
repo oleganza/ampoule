@@ -140,9 +140,21 @@ module Ampoule
       def initialize(delegate = nil, &blk)
         @delegate = delegate
         @buffer = ""
-        __instance_eval(&blk)
+        run!(&blk) if blk
       end
-
+      
+      def with_modules(*modules)
+        modules.each do |m|
+          class <<self; self; end.send(:include, m)
+        end
+        self
+      end
+      
+      def run!(&blk)
+        __instance_eval(&blk)
+        self
+      end
+      
       def puts(s)
         print("#{s}\n")
       end
@@ -174,13 +186,11 @@ module Ampoule
           @delegate
         else
           methods.each do |m|
-            class <<self; self; end.send(:define_method, m) { @delegate.send(m) }
+            class <<self; self; end.send(:define_method, m) do |*args| 
+              @delegate.send(m, *args)
+            end
           end
         end
-      end
-      
-      def helper(name, &implementation)
-        class <<self; self; end.send(:define_method, name, &implementation)
       end
       
       def h(text)
@@ -422,6 +432,90 @@ module Ampoule
     end
   end
   
+  module LayoutHelpers
+
+    def tasks_table(tasks, opts, &blk)
+      opts = opts.dup
+      cls = ["tasks", opts.delete(:class), opts.delete("class")].compact.join(" ")
+      table({:border => 0, :class => cls}.merge(opts)) do
+        blk.call if blk
+        tasks.each do |task|
+          tr do
+            td(:class => "task-title textual") do
+              a(:href => "/#{task.id}"){ h(task.title) }
+              small do
+                status = task.last_status_line.
+                            gsub(/assigned to .*? (by .*)/i, "reassigned \\1").
+                            gsub(/([^\.])\.\Z/,"\\1")
+                puts(h(status) + " ")
+                nobr { task.modified_at.to_relative_string_if_recent.and{|s| "(#{s})" }.to_s} 
+              end
+            end
+            td(:class => "task-person textual") do
+              h(task.assigned_to)
+            end
+          end
+        end # tasks.each
+        
+        ""
+      end # table
+    end # tasks_table
+    
+    def formatted_text(text)
+      return "" if text.blank?
+      text = text.gsub(/\r\n/, "\n").gsub(/\r/, "\n")
+      paragraphs = text.split(/\n\n+/)
+      text = paragraphs.map do |paragraph|
+        if paragraph[/\n[ \t]+/]
+          %{<code><pre>#{h(paragraph)}</pre></code>}
+        else
+          %{<p>#{hbr(paragraph)}</p>}
+        end
+      end.join
+
+      # 1. Unwrap link to task 
+      text.gsub!(%r{http://localhost:\d+/(\d{8}-\d{6}-\d+)/?}, "task \\1")
+
+      # 2. Wrap task id into link
+      text.gsub!(%r{((task|case|bug) (\d{8}-\d{6}-\d+))}, %{<a href="/\\3">\\1</a>})
+
+      # 3. Highlight other links
+      text.gsub!(%r{(http://[^\s<>\n\r]+)}) do
+        url = $1
+        last = url[-1,1]
+        if last =~ /[\.:;,?!]/
+          url = url[0..-2]
+        else
+          last = ""
+        end
+        %{<a href="#{url}">#{url}</a>#{last}}
+      end
+      text
+    end # formatted_text
+
+    def hbr(text)
+      h(text.strip).gsub(/\n/, "<br/>")
+    end
+    
+    def submit_button(attrs, &blk)
+      input({:type => :submit,
+             :name => :submit,
+             :value => :Ok,
+             :disabled => !!attrs.delete(:disabled)}.merge(attrs), &blk)
+    end
+    
+    def select_tag(attrs)
+      value = attrs.delete(:value)
+      options = (attrs.delete(:options)||[]) | [value].or([])
+      select(attrs) do
+        options.each do |opt|
+          option(:selected => (opt == value)) { opt }
+        end
+        nil
+      end
+    end # select_tag
+  end # LayoutHelpers
+  
   module Layout
     include FileHelper
     attr_accessor :page_title
@@ -430,95 +524,10 @@ module Ampoule
       @page_title || project_title 
     end
     
-    def layout(attrs_for_body = {}, &blk)
-      PresentationBuilders::XMLBuilder.new(self) do
+    def layout(attrs_for_body = {}, &page_content_block)
+      PresentationBuilders::XMLBuilder.new(self).with_modules(LayoutHelpers).run! do
         
         delegate :project_title, :page_title, :current_user_name
-        
-        helper :tasks_table do |tasks, opts, &blk|
-          opts = opts.dup
-          cls = ["tasks", opts.delete(:class), opts.delete("class")].compact.join(" ")
-          table({:border => 0, :class => cls}.merge(opts)) do
-
-            blk.call if blk
-
-            tasks.each do |task|
-              tr do
-                td(:class => "task-title textual") do
-                  a(:href => "/#{task.id}"){ h(task.title) }
-                  small do
-                    status = task.last_status_line.
-                                gsub(/assigned to .*? (by .*)/i, "reassigned \\1").
-                                gsub(/([^\.])\.\Z/,"\\1")
-                    puts(h(status) + " ")
-                    nobr { task.modified_at.to_relative_string_if_recent.and{|s| "(#{s})" }.to_s} 
-                  end
-                end
-                td(:class => "task-person textual") do
-                  h(task.assigned_to)
-                end
-              end
-            end # tasks.each
-            
-            ""
-          end # table
-          
-        end # helper :tasks_table
-        
-        helper :formatted_text do |text|
-          return "" if text.blank?
-          text = text.gsub(/\r\n/, "\n").gsub(/\r/, "\n")
-          paragraphs = text.split(/\n\n+/)
-          text = paragraphs.map do |paragraph|
-            if paragraph[/\n[ \t]+/]
-              %{<code><pre>#{h(paragraph)}</pre></code>}
-            else
-              %{<p>#{hbr(paragraph)}</p>}
-            end
-          end.join
-
-          # 1. Unwrap link to task 
-          text.gsub!(%r{http://localhost:\d+/(\d{8}-\d{6}-\d+)/?}, "task \\1")
-
-          # 2. Wrap task id into link
-          text.gsub!(%r{((task|case|bug) (\d{8}-\d{6}-\d+))}, %{<a href="/\\3">\\1</a>})
-
-          # 3. Highlight other links
-          text.gsub!(%r{(http://[^\s<>\n\r]+)}) do
-            url = $1
-            last = url[-1,1]
-            if last =~ /[\.:;,?!]/
-              url = url[0..-2]
-            else
-              last = ""
-            end
-            %{<a href="#{url}">#{url}</a>#{last}}
-          end
-
-          text
-        end # helper :formatted_text
-
-        helper :hbr do |text|
-          h(text.strip).gsub(/\n/, "<br/>")
-        end
-        
-        helper :submit_button do |attrs, &blk|
-          input({:type => :submit, 
-                 :name => :submit, 
-                 :value => :Ok, 
-                 :disabled => !!attrs.delete(:disabled)}.merge(attrs), &blk)
-        end
-        
-        helper :select_tag do |attrs|
-          value = attrs.delete(:value)
-          options = (attrs.delete(:options)||[]) | [value].or([])
-          select(attrs) do
-            options.each do |opt|
-              option(:selected => (opt == value)) { opt }
-            end
-            nil
-          end
-        end
         
         html do
           head do
@@ -530,7 +539,7 @@ module Ampoule
             attrs_for_body[:onload] = %{document.getElementById('#{domid}').focus()} 
           end
           body(attrs_for_body) do
-            __instance_eval(&blk) if blk
+            __instance_eval(&page_content_block) if page_content_block
             br
             br
           end
@@ -574,6 +583,12 @@ module Ampoule
       opened_tasks = opened_tasks.sort_by {|t| -t.modified_at.to_i }
       closed_tasks = closed_tasks.sort_by {|t| -t.modified_at.to_i }
       
+      opened_tasks_by_priority = opened_tasks.inject({}) do |hash, task|
+        (hash[task.priority] ||= []) << task
+        hash
+      end
+      
+      priorities = Task::PRIORITIES
       
       layout :focus => :newitemtitle do
         
@@ -582,7 +597,7 @@ module Ampoule
         end
         
         form(:action => "/", :method => :POST, :class => 'new-task') do
-          tasks_table(opened_tasks, :class => "opened-tasks") do
+          tasks_table(opened_tasks_by_priority[priorities.first], :class => "opened-tasks") do
             tr :class => "new-task-row" do
               td :class => "task-title" do
                 input(:name => "title", :value => "", :id => :newitemtitle)
@@ -601,6 +616,14 @@ module Ampoule
             end # tr
           end # tasks_table
         end # new task form
+        
+        priorities[1..-1].each do |priority|
+          tasks = opened_tasks_by_priority[priority]
+          if !tasks.blank?
+            h3 { priority }
+            tasks_table(tasks, :class => "opened-tasks")
+          end
+        end
         
         h2 { "Closed tasks" } if !closed_tasks.empty?
         
@@ -720,7 +743,7 @@ module Ampoule
       if status_changed
         redirect_to "/"
       else
-        redirect_to  "/#{task.id}"
+        redirect_to "/" # redirect_to  "/#{task.id}"
       end
     end
     
@@ -764,11 +787,17 @@ module Ampoule
           margin "1.8em 0 0.5em 0"
           color "#666"
         }
-
+        
+        h3 {
+          font :size => "0.9em"
+          margin "1em 0 0.4em 0"
+        }
+        
         a { color "#333" }
         a(:hover) { color "#000" }
 
-        _ ".new-task" do
+        form ".new-task" do
+          margin 0;
           input do
             font :family => app_font_family, :size => 1.0.em
             margin_left  -3.px
