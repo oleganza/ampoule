@@ -1210,8 +1210,21 @@ module Ampoule
         end
       end
     end
-  
+    
+    class ::NilClass
+      def next_ampoule_id(offset = 3)
+        ("0"*(offset + 1)).next_ampoule_id(offset)
+      end
+    end
+    
     class ::String
+      
+      def next_ampoule_id(offset = 3)
+        d = 10**offset
+        c = to_i/d + 1
+        "#{c}#{rand(d).to_s.rjust(offset,'0')}"
+      end
+      
       def to_short_line
         max_len = 40
         if gsub("\n"," ") =~ %r{\A(.{10,#{max_len}}\S[\.\?\!\(\[\{]\s)}u
