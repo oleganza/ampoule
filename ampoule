@@ -877,7 +877,11 @@ module Ampoule
         
         a { color "#333" }
         a(:hover) { color "#000" }
-
+        
+        monospace = (Proc.new { font :family => "Consolas, Monaco, monospace" })
+        code(&monospace)
+        pre(&monospace)
+        
         form ".new-task" do
           margin 0;
           
