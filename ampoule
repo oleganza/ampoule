@@ -97,12 +97,13 @@ module Ampoule
 
     def tasks
       $file_buffer.glob("_ampoule/*.yaml").map do |path|
-        if path =~ %r{/([^/]+)\.yaml$}
+        if path =~ %r{/([\d\-]+)\.yaml$}
           Task.task_with_id_and_yaml($1, file_contents_for_path(path))
         else
-          raise "Task id is corrupted? Path: #{path}"
+          nil
+          #raise "Task id is corrupted? Path: #{path}"
         end
-      end
+      end.compact
     end
 
     def task_by_id(id)
@@ -113,15 +114,43 @@ module Ampoule
         
     def save_task(task)
       task.mark_as_modified
+      update_user_names_with_name(task.assigned_to)
       set_file_contents_for_name(task.to_yaml, %{#{task.id}.yaml})
     end
     
-    def current_user_name=(n)
-      self.git_user_name = n
+    def current_user_name=(name)
+      name = name.strip
+      names = user_names
+      names.delete(current_user_name)
+      names << name
+      self.user_names = names
+      self.git_user_name = name
     end
     
     def current_user_name
+      update_user_names_with_name(git_user_name)
       git_user_name
+    end
+    
+    def user_names
+      @user_names ||= begin
+        names = (file_contents_for_name(%{user_names.yaml}).and do |data|
+          YAML.load(data)
+        end.or [])
+      end
+    end
+
+    def user_names=(names)
+      @user_names = names.sort
+      set_file_contents_for_name(@user_names.to_yaml, %{user_names.yaml})
+    end
+    
+    def update_user_names_with_name(name)
+      names = user_names
+      if name.and {|n| !names.include?(n) }
+        names << name
+        self.user_names = names
+      end
     end
     
   end
@@ -386,7 +415,6 @@ module Ampoule
     end
   end
   
-  
   #
   # Controllers
   #
@@ -504,30 +532,44 @@ module Ampoule
              :disabled => !!attrs.delete(:disabled)}.merge(attrs), &blk)
     end
     
-    def select_tag(attrs)
+    def select_tag(attrs, &blk)
       value = attrs.delete(:value)
       options = (attrs.delete(:options)||[]) | [value].or([])
       select(attrs) do
         options.each do |opt|
           option(:selected => (opt == value)) { opt }
         end
+        yield if blk
         nil
       end
     end # select_tag
+
+    def assign_tag(attrs)
+      select_tag({:name => :assigned_to, :options => user_names, :onchange => "return onAssign(this);"}.merge(attrs)) do
+        hr
+        option { "New person..." }
+      end
+    end
+
   end # LayoutHelpers
   
-  module Layout
+  class AppController < Controller
     include FileHelper
     attr_accessor :page_title
     
     def page_title
-      @page_title || project_title 
+      @page_title || project_title
+    end
+    
+    def default_assigned_to
+      $last_assigned_person.or { current_user_name }
     end
     
     def layout(attrs_for_body = {}, &page_content_block)
       PresentationBuilders::XMLBuilder.new(self).with_modules(LayoutHelpers).run! do
         
-        delegate :project_title, :page_title, :current_user_name
+        delegate :project_title, :page_title, 
+                 :current_user_name, :default_assigned_to, :user_names
         
         html do
           head do
@@ -539,6 +581,33 @@ module Ampoule
             attrs_for_body[:onload] = %{document.getElementById('#{domid}').focus()} 
           end
           body(attrs_for_body) do
+            
+            script do
+              %{
+                var initialPersonSelectTagValue = #{default_assigned_to.inspect}
+                function onAssign(selectTag) {
+                  if (selectTag.value != "New person...") {
+                    initialPersonSelectTagValue = selectTag.value
+                    return
+                  }
+                  var newName = prompt('New person name')
+                  if (!newName) {
+                    selectTag.value = initialPersonSelectTagValue
+                    return
+                  }
+                  var opt = document.createElement('option')
+                  opt.setAttribute('value', newName)
+                  opt.appendChild(document.createTextNode(newName))
+                  selectTag.insertBefore(opt, selectTag.getElementsByTagName("hr").item(0))
+                  selectTag.value = newName
+                }
+                function onReassign(selectTag) {
+                  onAssign(selectTag);
+                  // TODO: submit some hidden form
+                }
+              }
+            end
+            
             __instance_eval(&page_content_block) if page_content_block
             br
             br
@@ -546,11 +615,9 @@ module Ampoule
         end # html
       end # XMLBuilder
     end # layout
-        
   end # Layout
   
-  class TasksController < Controller
-    include Layout
+  class TasksController < AppController
     
     def get
       if current_user_name.blank?
@@ -595,7 +662,7 @@ module Ampoule
         form :action => "/title", :method => "POST" do
           h1(:class => 'index-title') { input(:value => page_title, :name => :title) }
         end
-        
+                
         form(:action => "/", :method => :POST, :class => 'new-task') do
           tasks_table(opened_tasks_by_priority[priorities.first], :class => "opened-tasks") do
             tr :class => "new-task-row" do
@@ -603,13 +670,8 @@ module Ampoule
                 input(:name => "title", :value => "", :id => :newitemtitle)
               end
               td :class => "task-person" do
-                value = $last_assigned_person.or { current_user_name }
                 nobr do
-                  input(:name    => :assigned_to, 
-                        :value   => value, 
-                        :id      => :newitemperson,  
-                        :size => 15)
-                  puts("&nbsp;")
+                  assign_tag(:value => default_assigned_to)
                   submit_button(:value => :Assign)
                 end
               end # td
@@ -644,9 +706,7 @@ module Ampoule
     
   end # TasksController
   
-  class TaskController < Controller
-    include Layout
-    include FileHelper
+  class TaskController < AppController
     
     def task
       @task ||= task_by_id(request.path[1..-1])
@@ -687,7 +747,7 @@ module Ampoule
           div :class => "buttons panel" do
             div :class => "save-buttons" do
               label { "assigned to " }
-              input(:name => "assigned_to", :value => task.assigned_to)
+              assign_tag(:value => task.assigned_to)
               label { "priority " }
               select_tag(:name => :priority, :value => task.priority, :options => task.priorities)
               submit_button(:name => :save, :value => :Save)
@@ -751,7 +811,7 @@ module Ampoule
   # CSS
   #
   
-  class CSSController < Controller
+  class CSSController < AppController
     def get
       PresentationBuilders::CSSBuilder.new do
         app_font_family = "Helvetica, sans-serif"
@@ -802,17 +862,20 @@ module Ampoule
 
         form ".new-task" do
           margin 0;
+          
           input do
             font :family => app_font_family, :size => 1.0.em
-            margin_left  -3.px
-            padding_left  0.px
+          end
+          
+          select do
+            margin_left -3.px
           end
         end
-
+        
         _ ".tasks" do
           width       "100%"
           margin_left "-1px"
-
+          
           td do 
             font     :family => app_font_family, :size => 0.9.em
             line_height "120%"
@@ -821,11 +884,10 @@ module Ampoule
           td(".textual") { vertical_align :top }
           td(".task-person") { font_size 0.83.em }
           
-
           _ ".new-task-row td" do
             padding_top "0.5em"
           end
-
+          
           a         { color "#333"; text_decoration :none }
           a(:hover) { color "#000"; text_decoration :underline }
 
@@ -930,16 +992,14 @@ module Ampoule
     end # get
   end # CSSController
   
-  class TitleController < Controller
-    include FileHelper
+  class TitleController < AppController
     def post
       set_project_title(param(:title))
       redirect_to "/"
     end
   end
   
-  class UsernameController < Controller
-    include FileHelper
+  class UsernameController < AppController
     def post
       self.current_user_name = param(:name)
       redirect_to "/"

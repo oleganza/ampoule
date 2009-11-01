@@ -1,10 +1,10 @@
 --- !ruby/struct:Ampoule::Task 
 title: css tweaks to select tags
-priority: this week
-assigned_to: Robin Hood
-status: opened
+priority: today
+assigned_to: Oleg Andreev
+status: closed
 created_at: 2009-11-01 19:07:20.257021 +01:00
-modified_at: 2009-11-01 19:46:02.592721 +01:00
+modified_at: 2009-11-01 19:46:16.594426 +01:00
 comments: 
 - !ruby/struct:Ampoule::Comment 
   author: Oleg Andreev
@@ -26,3 +26,8 @@ comments:
   date: 2009-11-01 19:46:02.596550 +01:00
   status: assigned to Robin Hood
   body: ""
+- !ruby/struct:Ampoule::Comment 
+  author: Oleg Andreev
+  date: 2009-11-01 19:46:16.597112 +01:00
+  status: assigned to Oleg Andreev
+  body: done.
