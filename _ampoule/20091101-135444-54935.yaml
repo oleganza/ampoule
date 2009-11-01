@@ -1,10 +1,10 @@
 --- !ruby/struct:Ampoule::Task 
 title: reassign task by clicking on a name in the list view
-priority: later
+priority: today
 assigned_to: Oleg Andreev
 status: opened
 created_at: 2009-11-01 13:54:44.167182 +01:00
-modified_at: 2009-11-01 13:55:49.044345 +01:00
+modified_at: 2009-11-01 19:07:55.792576 +01:00
 comments: 
 - !ruby/struct:Ampoule::Comment 
   author: Oleg Andreev
