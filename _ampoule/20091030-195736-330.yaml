@@ -1,9 +1,10 @@
 --- !ruby/struct:Ampoule::Task 
-title: " register a new name in a list of names when user opens the page for the first time "
+title: " register a new username in a list of names when user opens the page for the first time "
+priority: this week
 assigned_to: Oleg Andreev
 status: opened
 created_at: 2009-10-30 19:57:36.891325 +01:00
-modified_at: 2009-10-30 20:05:44.268360 +01:00
+modified_at: 2009-11-01 14:23:17.850626 +01:00
 comments: 
 - !ruby/struct:Ampoule::Comment 
   author: Oleg Andreev
