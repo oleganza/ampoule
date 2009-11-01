@@ -1,0 +1,13 @@
+--- !ruby/struct:Ampoule::Task 
+title: make me a sandwich
+priority: today
+assigned_to: AJ
+status: opened
+created_at: 2009-11-01 20:28:29.901464 +01:00
+modified_at: 2009-11-01 20:28:29.899898 +01:00
+comments: 
+- !ruby/struct:Ampoule::Comment 
+  author: Oleg Andreev
+  date: 2009-11-01 20:28:29.902145 +01:00
+  status: opened
+  body: ""
