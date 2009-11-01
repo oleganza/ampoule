@@ -1,10 +1,10 @@
 --- !ruby/struct:Ampoule::Task 
 title: finish the ruby 1.9 book
 priority: this week
-assigned_to: Dave Thomas
+assigned_to: Michael Jordan
 status: closed
 created_at: 2009-11-01 19:03:21.402406 +01:00
-modified_at: 2009-11-01 19:46:41.776537 +01:00
+modified_at: 2009-11-01 20:15:44.572315 +01:00
 comments: 
 - !ruby/struct:Ampoule::Comment 
   author: Oleg Andreev
