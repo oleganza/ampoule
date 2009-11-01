@@ -1,9 +1,10 @@
 --- !ruby/struct:Ampoule::Task 
 title: email notifications
+priority: later
 assigned_to: Oleg Andreev
 status: opened
 created_at: 2009-10-30 19:55:49.196422 +01:00
-modified_at: 2009-10-30 20:06:18.915091 +01:00
+modified_at: 2009-11-01 14:21:52.603327 +01:00
 comments: 
 - !ruby/struct:Ampoule::Comment 
   author: Oleg Andreev
