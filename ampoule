@@ -272,7 +272,6 @@ module Ampoule
       end
     end # CSSBuilder
     
-    
   end # PresentationBuilders
 
   #
@@ -687,8 +686,9 @@ module Ampoule
           
           div :class => "buttons panel" do
             div :class => "save-buttons" do
-              puts("assigned to ")
+              label { "assigned to " }
               input(:name => "assigned_to", :value => task.assigned_to)
+              label { "priority " }
               select_tag(:name => :priority, :value => task.priority, :options => task.priorities)
               submit_button(:name => :save, :value => :Save)
             end
@@ -741,11 +741,7 @@ module Ampoule
       
       save_task(task)
       
-      if status_changed
-        redirect_to "/"
-      else
-        redirect_to "/" # redirect_to  "/#{task.id}"
-      end
+      redirect_to "/"
     end
     
   end # TaskController
@@ -870,6 +866,7 @@ module Ampoule
           div ".panel" do 
             position :relative
             width "70%"
+            padding 1.px # so we do not cut aqua button half-pixel edge
             overflow :hidden
             margin_bottom 0.5.em
             input ", select" do 
@@ -879,19 +876,29 @@ module Ampoule
 
           div ".status-buttons" do
             float :left
-            input  { margin_right 0.6.em }
+            input  { margin_right 0.6.em; width 4.5.em }
             select { margin_right 0.6.em }
           end
           
           div ".save-buttons" do
             float :right
             input  { margin_left 0.6.em }
+            input '[type="submit"]' do width 5.em; end
             select { margin_left 0.6.em }
           end
-
+          
+          label do
+            font_size 0.9.em
+            margin_left 1.em
+            margin_right -0.5.em
+          end
+          
           input '[type="submit"]' do
             font :family => app_font_family, :size => 1.em
-            width 5.em
+          end
+          
+          select '[name="priority"]' do
+            width 7.em
           end
         end
 
