@@ -436,6 +436,7 @@ module Ampoule
 
     def tasks_table(tasks, opts, &blk)
       opts = opts.dup
+      tasks ||= []
       cls = ["tasks", opts.delete(:class), opts.delete("class")].compact.join(" ")
       table({:border => 0, :class => cls}.merge(opts)) do
         blk.call if blk
