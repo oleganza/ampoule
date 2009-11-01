@@ -759,7 +759,7 @@ module Ampoule
         body {
           font   "100% #{app_font_family}"
           color  "#333"
-          margin "3em 1em 1em 4em"    
+          margin "3em 1em 1em 7em"    
         }
 
         h1 {
@@ -790,8 +790,11 @@ module Ampoule
         }
         
         h3 {
-          font :size => "0.9em"
-          margin "1em 0 0.4em 0"
+          font :size => "0.9em", :weight => :normal
+          margin "1em 0 -1.39em -7em"
+          width 6.em
+          color "#999"
+          text_align :right
         }
         
         a { color "#333" }
@@ -812,7 +815,8 @@ module Ampoule
 
           td do 
             font     :family => app_font_family, :size => 0.9.em
-            padding  "2px 0 5px 0"
+            line_height "120%"
+            padding  "2px 0 2px 0"
           end
           td(".textual") { vertical_align :top }
           td(".task-person") { font_size 0.83.em }
