@@ -1,0 +1,13 @@
+--- !ruby/struct:Ampoule::Task 
+title: do this now
+priority: today
+assigned_to: Oleg Andreev
+status: opened
+created_at: 2009-11-01 14:43:48.926522 +01:00
+modified_at: 2009-11-01 14:43:48.925473 +01:00
+comments: 
+- !ruby/struct:Ampoule::Comment 
+  author: Oleg Andreev
+  date: 2009-11-01 14:43:48.927270 +01:00
+  status: opened
+  body: ""
