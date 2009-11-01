@@ -1,9 +1,10 @@
 --- !ruby/struct:Ampoule::Task 
 title: ampoule inside a regular project repository
+priority: later
 assigned_to: Oleg Andreev
 status: opened
 created_at: 2009-10-30 19:57:13.513260 +01:00
-modified_at: 2009-10-30 20:06:30.765451 +01:00
+modified_at: 2009-11-01 14:22:57.307111 +01:00
 comments: 
 - !ruby/struct:Ampoule::Comment 
   author: Oleg Andreev

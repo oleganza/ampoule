@@ -1,9 +1,10 @@
 --- !ruby/struct:Ampoule::Task 
 title: browse per-page history
+priority: later
 assigned_to: Oleg Andreev
 status: opened
 created_at: 2009-10-30 19:50:27.440946 +01:00
-modified_at: 2009-10-30 20:06:12.781198 +01:00
+modified_at: 2009-11-01 14:22:37.099875 +01:00
 comments: 
 - !ruby/struct:Ampoule::Comment 
   author: Oleg Andreev
