@@ -777,9 +777,13 @@ module Ampoule
 
         h1 ".index-title" do
           input {
-            border        :none
-            width         "100%"
+            border        "1px solid #fff"
+            width         "70%"
+            margin_left   -1.px # compensation for the 1px border
             outline_style :none
+          }
+          input(:focus) {
+            border_color "#ddd"
           }
         end
 
