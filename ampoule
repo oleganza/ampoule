@@ -480,11 +480,13 @@ module Ampoule
               end
             end
             td(:class => "task-person textual") do
-              h(task.assigned_to)
+              div :class => "assigned-to" do
+                puts h(task.assigned_to)
+                reassign_tag(:value => task.assigned_to, :task_id => task.id)
+              end
             end
           end
         end # tasks.each
-        
         ""
       end # table
     end # tasks_table
@@ -550,6 +552,11 @@ module Ampoule
         option { "New person..." }
       end
     end
+    
+    def reassign_tag(attrs)
+      task_id = attrs[:task_id] or raise(ArgumentError, ":task_id is not specified!")
+      assign_tag({:onchange => "return onReassign(this, #{task_id.inspect});"}.merge(attrs))
+    end
 
   end # LayoutHelpers
   
@@ -601,9 +608,20 @@ module Ampoule
                   selectTag.insertBefore(opt, selectTag.getElementsByTagName("hr").item(0))
                   selectTag.value = newName
                 }
-                function onReassign(selectTag) {
+                function onReassign(selectTag, taskId) {
                   onAssign(selectTag);
-                  // TODO: submit some hidden form
+                  var form = document.createElement("form")
+                  form.setAttribute("method", "POST")
+                  form.setAttribute("action", "/reassign")
+                  var taskIdTag = document.createElement("input")
+                  taskIdTag.setAttribute("name", "task_id")
+                  taskIdTag.setAttribute("value", taskId)
+                  var assignedTo = document.createElement("input")
+                  assignedTo.setAttribute("name", "assigned_to")
+                  assignedTo.setAttribute("value", selectTag.value)
+                  form.appendChild(assignedTo)
+                  form.appendChild(taskIdTag)
+                  form.submit()
                 }
               }
             end
@@ -882,8 +900,23 @@ module Ampoule
             padding  "2px 0 2px 0"
           end
           td(".textual") { vertical_align :top }
-          td(".task-person") { font_size 0.83.em }
-          
+          td(".task-person") do 
+            font_size 0.83.em
+            
+            div ".assigned-to" do
+              position :relative
+              overflow :hidden
+              select do
+                position :absolute
+                top 0
+                left 0
+                opacity 0
+                height "100%"
+                outline_style :none
+              end
+            end
+          end
+                    
           _ ".new-task-row td" do
             padding_top "0.5em"
           end
@@ -1006,6 +1039,17 @@ module Ampoule
     end
   end
   
+  class ReassignController < AppController
+    def post
+      task = task_by_id(param(:task_id))
+      assigned_to = param(:assigned_to)
+      if task && assigned_to
+        task.assigned_to = assigned_to
+        save_task(task)
+      end
+      redirect_to "/"
+    end
+  end
   
   #
   # Helpers
@@ -1104,6 +1148,7 @@ module Ampoule
       when "/":            TasksController
       when "/title":       TitleController
       when "/username":    UsernameController
+      when "/reassign":    ReassignController
       when "/style.css":   CSSController
       when "/favicon.ico": Controller
       else                 TaskController
