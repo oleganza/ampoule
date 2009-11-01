@@ -1,10 +1,10 @@
 --- !ruby/struct:Ampoule::Task 
 title: refactor CSSBuilder state stack
-priority: later
+priority: never
 assigned_to: Oleg Andreev
 status: opened
 created_at: 2009-11-01 13:58:56.350745 +01:00
-modified_at: 2009-11-01 13:59:03.223588 +01:00
+modified_at: 2009-11-01 21:21:25.926201 +01:00
 comments: 
 - !ruby/struct:Ampoule::Comment 
   author: Oleg Andreev
