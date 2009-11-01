@@ -1,0 +1,13 @@
+--- !ruby/struct:Ampoule::Task 
+title: just another stupid idea
+priority: never
+assigned_to: Oleg Andreev
+status: opened
+created_at: 2009-11-01 14:31:25.273894 +01:00
+modified_at: 2009-11-01 14:31:40.597897 +01:00
+comments: 
+- !ruby/struct:Ampoule::Comment 
+  author: Oleg Andreev
+  date: 2009-11-01 14:31:25.274662 +01:00
+  status: opened
+  body: ""
