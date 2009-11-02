@@ -1,12 +1,26 @@
 #!/usr/bin/env ruby
-# Updated: 28 October, 2009 by Oleg Andreev
+# Updated: 2 November, 2009 by Oleg Andreev
 #
 # ABOUT
-#
-# Ampoule is a simple distributed bugtracker based on git.
-# For each project you should setup a separate git repository and run ./ampoule to get access to the UI
-# You may open and close tasks, assign them to someone and add comments.
-# Data is automatically synchronized with the remote repository.
+# 
+# Ampoule is a minimal bug tracker based on Git.
+# 
+# To start, run ampoule executable inside any git repository. 
+# You will be asked for a writable URL if it could not be guessed from .git/config
+# Tasks are stored in human-readable YAML format in a separate branch "ampoule-tasks". 
+# Your development history is never polluted with ampoule commits.
+# 
+# Features:
+#   open/close tasks, assign to people and set priorities
+#   comments for tasks
+#   offline work: tasks are stored in your project's repository
+#   autosync: updates are commited and pushed immediately, git pull is performed every 2-3 seconds
+# 
+# Requirement: ruby 1.8.7+
+#   tested on ruby 1.8.7 (2008-08-11 patchlevel 72) [universal-darwin10.0]
+#   html is tested on Safari 4.0.3
+# 
+# Source code: git://github.com/oleganza/ampoule.git
 #
 #
 # MIT LICENSE
