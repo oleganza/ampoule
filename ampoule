@@ -57,16 +57,16 @@ module Ampoule
   
   module GitHelper
     def git_user_name
-      @git_user_name ||= `git config user.name`.strip
+      @git_user_name ||= `cd .git/ampoule; git config user.name`.strip
     end
     
     def git_user_email
-      @git_user_email ||= `git config user.email`.strip
+      @git_user_email ||= `cd .git/ampoule; git config user.email`.strip
     end
     
     def git_user_name=(n)
       n = n.gsub(/["`'\\\n\r\t\v]+/, '')
-      `git config user.name "#{n}"`
+      `cd .git/ampoule; git config user.name "#{n}"`
     end
   end
   
@@ -78,13 +78,11 @@ module Ampoule
     end
     
     def file_contents_for_name(name)
-      file_contents_for_path("_ampoule/#{name}")
+      file_contents_for_path(".git/ampoule/#{name}")
     end
     
     def set_file_contents_for_name(content, name)
-      path = "_ampoule/#{name}"
-      Dir.mkdir("_ampoule") if !File.exists?("_ampoule")
-      
+      path = ".git/ampoule/#{name}"
       $file_buffer.write(path, content)
     end
     
@@ -97,7 +95,7 @@ module Ampoule
     end
 
     def tasks
-      $file_buffer.glob("_ampoule/*.yaml").map do |path|
+      $file_buffer.glob(".git/ampoule/*.yaml").map do |path|
         if path =~ %r{/([\d\-]+)\.yaml$}
           Task.task_with_id_and_yaml($1, file_contents_for_path(path))
         else
@@ -1117,7 +1115,7 @@ module Ampoule
             break
           end
 
-          `git pull`
+          `cd .git/ampoule; git pull`
           
           if msg == :push
                       
@@ -1131,7 +1129,7 @@ module Ampoule
             end
             
             if !ENV["AMPOULE_NOPUSH"]
-              `git add _ampoule; git commit -m "synced #{paths.join(', ')}"; git push`
+              `cd .git/ampoule; git add .; git commit -m "synced #{paths.join(', ')}"; git push`
             end
           end
         end
@@ -1170,6 +1168,80 @@ module Ampoule
   #
   # Server config
   #
+  
+  def self.setup
+    return if File.readable?(".git/ampoule")
+    
+    `git clone -n -s . .git/ampoule`
+    
+    url_for_origin = Proc.new do |origin|
+      if origin[%r{[@\./:]}]
+        origin
+      else
+        `git config remote.#{origin}.url`.strip
+      end
+    end
+    
+    ensure_url = Proc.new do |url|
+      url = "" if url[%r{^(git|html)://}]
+      url.or do
+        print "URL for the writable repository to push: "
+        while (s = gets).blank?; end
+        s.strip
+      end.strip
+    end
+    
+    configure = Proc.new do |url|
+      `cd .git/ampoule; git config remote.origin.url #{url}`
+      `cd .git/ampoule; git config remote.origin.fetch +refs/heads/ampoule-tasks:refs/remotes/origin/ampoule-tasks`
+      `cd .git/ampoule; git config remote.origin.push ampoule-tasks:ampoule-tasks`
+      
+      `cd .git/ampoule; git config branch.ampoule-tasks.remote origin`
+      `cd .git/ampoule; git config branch.ampoule-tasks.merge refs/heads/ampoule-tasks`
+    end
+    
+    `git fetch 2>&1` # ensure that we have all branches up to date
+    
+    if `git branch -r` =~ %r{(\w+)/ampoule-tasks}
+      origin = $1
+      puts "Checking out ampoule-tasks branch..."
+      url = ensure_url[url_for_origin[origin]]
+      configure[url]
+      `cd .git/ampoule; git fetch 2>&1`
+      `cd .git/ampoule; git checkout -b ampoule-tasks remotes/origin/ampoule-tasks 2>&1`
+      
+    else
+      puts "Creating ampoule-tasks branch..."
+      head = (File.read(".git/HEAD") rescue "")
+      if head =~ %r{ref: refs/heads/(\w+)}
+        origin = `git config branch.#{$1}.remote`.strip
+        url = url_for_origin[origin]
+      end
+      url = ensure_url[url]
+      configure[url]
+      
+      `cd .git/ampoule; git status 2>&1` # this triggers index update so all items are marked as removed
+      `cd .git/ampoule; git checkout -b ampoule-tasks 2>&1`
+      `cd .git/ampoule; git commit -a -m "clean-up working directory after clone" 2>&1`
+      # creating dangling branch:
+      tree = `cd .git/ampoule; git log -1 --pretty=format:%T`.strip
+      commit = `cd .git/ampoule; echo "initial commit" | git commit-tree #{tree}`.strip
+      `cd .git/ampoule; git reset --hard #{commit}`
+      
+      push_cmd = "cd .git/ampoule; git push 2>&1"
+      push_result = `#{push_cmd}`
+      while !(push_result =~ /new branch.*ampoule-tasks.*ampoule-tasks/ui)
+        puts push_result
+        url = ensure_url[""]
+        configure[url]
+        push_result = `#{push_cmd}`
+      end
+      puts `cd .git/ampoule; git pull 2>&1`
+    end
+    
+    # TODO: ask for the user.name & store in .git/ampoule/.git/config
+    
+  end
   
   class Server
     def initialize(opts = {})
@@ -1231,6 +1303,7 @@ module Ampoule
   end
 
   module CoreExtensions
+    
     class ::Time
       def to_relative_string
         diff = (Time.now - self).to_i
@@ -1308,6 +1381,9 @@ module Ampoule
 end
 
 if $0 == __FILE__
+  
+  Ampoule::setup
+  
   if ARGV.shift == "-i"
     require 'irb'
     include Ampoule
