@@ -15,9 +15,14 @@ Features:
   offline work: tasks are stored in your project's repository
   autosync: updates are commited and pushed immediately, git pull is performed every 2-3 seconds
 
-Requirement: ruby 1.8.7+
-  tested on ruby 1.8.7 (2008-08-11 patchlevel 72) [universal-darwin10.0]
-  html is tested on Safari 4.0.3
+Requirements: 
+  ruby 1.8.7+
+  git 1.6.5.1+
+  
+Tested with:
+  ruby 1.8.7 (2008-08-11 patchlevel 72) [universal-darwin10.0]
+  git 1.6.5.1
+  Safari 4.0.3 on Mac OS X 10.6.0
 
 Source code: git://github.com/oleganza/ampoule.git
 
