@@ -919,6 +919,9 @@ module Ampoule
                 outline_style :none
               end
             end
+            
+            div ".assigned-to:hover" do
+            end
           end
                     
           _ ".new-task-row td" do
@@ -1066,10 +1069,12 @@ module Ampoule
       @queue = Queue.new
       @mutex = Mutex.new
       
-      @puller = Thread.new do
-        loop do
-          sleep(1 + rand(4))
-          @queue.push(:pull) if @queue.size < 1
+      if !ENV["AMPOULE_NOPULL"]
+        @puller = Thread.new do
+          loop do
+            sleep(1 + rand(4))
+            @queue.push(:pull) if @queue.size < 1
+          end
         end
       end
       
@@ -1104,6 +1109,7 @@ module Ampoule
     def stop
       puts "Ampoule::FileSyncBuffer: stopping..."
       @queue.push :stop
+      @puller.kill if @puller
       @pusher.join
     end
     
