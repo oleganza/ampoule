@@ -1,23 +1,28 @@
 --- !ruby/struct:Ampoule::Task 
 title: just another stupid idea
-priority: never
+priority: today
 assigned_to: Oleg Andreev
 status: closed
-created_at: 2009-11-01 14:31:25.273894 +01:00
-modified_at: 2009-11-02 13:15:46.266051 +01:00
+created_at: 2009-11-01 05:31:25.273894 -08:00
+modified_at: 2009-11-02 09:12:38.708032 -08:00
 comments: 
 - !ruby/struct:Ampoule::Comment 
   author: Oleg Andreev
-  date: 2009-11-01 14:31:25.274662 +01:00
+  date: 2009-11-01 05:31:25.274662 -08:00
   status: opened
   body: ""
 - !ruby/struct:Ampoule::Comment 
   author: Oleg Andreev
-  date: 2009-11-01 18:34:03.656453 +01:00
+  date: 2009-11-01 09:34:03.656453 -08:00
   status: 
   body: should i close this?
 - !ruby/struct:Ampoule::Comment 
   author: Oleg Andreev
-  date: 2009-11-02 13:15:46.267736 +01:00
+  date: 2009-11-02 04:15:46.267736 -08:00
   status: closed
   body: ""
+- !ruby/struct:Ampoule::Comment 
+  author: Yurii Rashkovskii
+  date: 2009-11-02 09:12:38.710717 -08:00
+  status: 
+  body: no you should not
