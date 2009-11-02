@@ -4,7 +4,7 @@ priority: this week
 assigned_to: Oleg Andreev
 status: opened
 created_at: 2009-10-30 19:57:13.513260 +01:00
-modified_at: 2009-11-02 08:53:27.078886 +01:00
+modified_at: 2009-11-02 13:30:29.467546 +01:00
 comments: 
 - !ruby/struct:Ampoule::Comment 
   author: Oleg Andreev
