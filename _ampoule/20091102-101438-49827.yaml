@@ -1,0 +1,13 @@
+--- !ruby/struct:Ampoule::Task 
+title: say hello
+priority: later
+assigned_to: "Gwendal Rou\xC3\xA9"
+status: opened
+created_at: 2009-11-02 10:14:38.478831 +01:00
+modified_at: 2009-11-02 10:14:53.224766 +01:00
+comments: 
+- !ruby/struct:Ampoule::Comment 
+  author: Oleg Andreev
+  date: 2009-11-02 10:14:38.479637 +01:00
+  status: opened
+  body: ""
