@@ -1,10 +1,10 @@
 --- !ruby/struct:Ampoule::Task 
-title: test ampole
+title: test ampoule
 priority: today
 assigned_to: Yurii Rashkovskii
 status: opened
 created_at: 2009-11-02 09:11:23.502681 -08:00
-modified_at: 2009-11-02 09:11:23.501274 -08:00
+modified_at: 2009-11-02 09:13:19.196916 -08:00
 comments: 
 - !ruby/struct:Ampoule::Comment 
   author: Yurii Rashkovskii
