@@ -4,7 +4,7 @@ priority: later
 assigned_to: "Gwendal Rou\xC3\xA9"
 status: opened
 created_at: 2009-11-02 10:14:38.478831 +01:00
-modified_at: 2009-11-02 10:15:36.309703 +01:00
+modified_at: 2009-11-02 10:16:17.940827 +01:00
 comments: 
 - !ruby/struct:Ampoule::Comment 
   author: Oleg Andreev
@@ -27,3 +27,23 @@ comments:
   status: 
   body: " asdas\r\n\
     dasd  \r\n  asdas\r\n    asd"
+- !ruby/struct:Ampoule::Comment 
+  author: Oleg Andreev
+  date: 2009-11-02 10:16:17.944004 +01:00
+  status: 
+  body: |
+    text
+    
+      code
+    
+    text
+    
+    code
+      code
+    
+    text
+    
+      code
+    code
+    
+
