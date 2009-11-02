@@ -1,0 +1,13 @@
+--- !ruby/struct:Ampoule::Task 
+title: replace <pre> with <code> and &nbsp; + <br/> so the text could wrap
+priority: later
+assigned_to: Oleg Andreev
+status: opened
+created_at: 2009-11-02 13:22:43.485856 +01:00
+modified_at: 2009-11-02 13:22:48.217731 +01:00
+comments: 
+- !ruby/struct:Ampoule::Comment 
+  author: Oleg Andreev
+  date: 2009-11-02 13:22:43.486650 +01:00
+  status: opened
+  body: ""
