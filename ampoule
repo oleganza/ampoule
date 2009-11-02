@@ -496,7 +496,7 @@ module Ampoule
       text = text.gsub(/\r\n/, "\n").gsub(/\r/, "\n")
       paragraphs = text.split(/\n\n+/)
       text = paragraphs.map do |paragraph|
-        if paragraph[/\n[ \t]+/]
+        if paragraph[/^[ \t]+/]
           %{<code><pre>#{h(paragraph)}</pre></code>}
         else
           %{<p>#{hbr(paragraph)}</p>}
