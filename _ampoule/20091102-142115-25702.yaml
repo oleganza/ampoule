@@ -1,0 +1,13 @@
+--- !ruby/struct:Ampoule::Task 
+title: autolink test
+priority: today
+assigned_to: Oleg Andreev
+status: opened
+created_at: 2009-11-02 14:21:15.992684 +01:00
+modified_at: 2009-11-02 14:21:15.991792 +01:00
+comments: 
+- !ruby/struct:Ampoule::Comment 
+  author: Oleg Andreev
+  date: 2009-11-02 14:21:15.993599 +01:00
+  status: opened
+  body: ""
