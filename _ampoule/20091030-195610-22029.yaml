@@ -1,10 +1,10 @@
 --- !ruby/struct:Ampoule::Task 
 title: ask for remote url and branch if not present
-priority: later
+priority: this week
 assigned_to: Oleg Andreev
 status: opened
 created_at: 2009-10-30 19:56:10.924164 +01:00
-modified_at: 2009-11-02 13:18:37.420586 +01:00
+modified_at: 2009-11-02 13:18:51.092701 +01:00
 comments: 
 - !ruby/struct:Ampoule::Comment 
   author: Oleg Andreev
