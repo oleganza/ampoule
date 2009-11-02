@@ -1,0 +1,78 @@
+--- !ruby/struct:Ampoule::Task 
+title: say hello
+priority: later
+assigned_to: "Gwendal Rou\xC3\xA9"
+status: opened
+created_at: 2009-11-02 10:14:38.478831 +01:00
+modified_at: 2009-11-02 13:14:44.377137 +01:00
+comments: 
+- !ruby/struct:Ampoule::Comment 
+  author: Oleg Andreev
+  date: 2009-11-02 10:14:38.479637 +01:00
+  status: opened
+  body: ""
+- !ruby/struct:Ampoule::Comment 
+  author: Oleg Andreev
+  date: 2009-11-02 10:15:19.777588 +01:00
+  status: closed
+  body: ""
+- !ruby/struct:Ampoule::Comment 
+  author: Oleg Andreev
+  date: 2009-11-02 10:15:22.483988 +01:00
+  status: reopened
+  body: ""
+- !ruby/struct:Ampoule::Comment 
+  author: Oleg Andreev
+  date: 2009-11-02 10:15:36.312299 +01:00
+  status: 
+  body: " asdas\r\n\
+    dasd  \r\n  asdas\r\n    asd"
+- !ruby/struct:Ampoule::Comment 
+  author: Oleg Andreev
+  date: 2009-11-02 10:16:17.944004 +01:00
+  status: 
+  body: |
+    text
+    
+      code
+    
+    text
+    
+    code
+      code
+    
+    text
+    
+      code
+    code
+
+- !ruby/struct:Ampoule::Comment 
+  author: Oleg Andreev
+  date: 2009-11-02 10:16:40.289543 +01:00
+  status: 
+  body: |
+    Counting objects: 5, done.
+    Delta compression using up to 2 threads.
+    Compressing objects: 100% (3/3), done.
+    Writing objects: 100% (3/3), 380 bytes, done.
+    Total 3 (delta 1), reused 0 (delta 0)
+    To git@sss.pierlis.com:gitosis-admin.git
+       66aa640..db4e88b  master -> master
+
+- !ruby/struct:Ampoule::Comment 
+  author: Oleg Andreev
+  date: 2009-11-02 13:14:44.381156 +01:00
+  status: 
+  body: |
+    master ~/Work/oleganza/ampoule $ ga ampoule 
+    master ~/Work/oleganza/ampoule $ gs
+    # On branch master
+    # Changes to be committed:
+    #   (use "git reset HEAD <file>..." to unstage)
+    #
+    #	modified:   ampoule
+    #
+    gmaster ~/Work/oleganza/ampoule $ gc 'fixed css'
+    [master 0d39c96] fixed css
+     1 files changed, 9 insertions(+), 8 deletions(-)
+

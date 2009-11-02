@@ -1,0 +1,67 @@
+--- !ruby/struct:Ampoule::Task 
+title: ampoule inside a regular project repository
+priority: this week
+assigned_to: Oleg Andreev
+status: opened
+created_at: 2009-10-30 19:57:13.513260 +01:00
+modified_at: 2009-11-02 13:30:29.467546 +01:00
+comments: 
+- !ruby/struct:Ampoule::Comment 
+  author: Oleg Andreev
+  date: 2009-10-30 19:57:13.513842 +01:00
+  status: opened
+  body: ""
+- !ruby/struct:Ampoule::Comment 
+  author: Oleg Andreev
+  date: 2009-10-30 19:57:19.990164 +01:00
+  status: 
+  body: |
+    The interesting case is to store tasks inside the regular repository (in a detached branch, probably). 
+    
+    The working tree for this branch should be located in .git/ampoule/
+    
+    1) init: to avoid full repository clone into .git/ampoule (which consumes disk space and cpu time), we should create a shallow clone of the current repository and update config
+    
+    2) pull: fetch the special branch "ampoule-tasks"; then merge it to the local ampoule-tasks branch
+
+- !ruby/struct:Ampoule::Comment 
+  author: Oleg Andreev
+  date: 2009-11-02 00:38:26.367209 +01:00
+  status: 
+  body: |
+    If .git/ampoule does not exist:
+    
+      $ git clone -s . .git/ampoule
+    
+       1) If has a remote branch "remotes/<origin-shortcut>/ampoule-tasks", check it out to the local branch "ampoule-tasks" inside .git/ampoule
+       2) Else: create a dangling branch and push it to the server.
+    
+    Guessing URL:
+    
+      1) $ git branch -r => "remotes/<origin-shortcut>/ampoule-tasks" 
+      2) $ git config remote.<origin-shortcut>.url #=> url (if the remote branch already exists)
+    
+      3) cat .git/HEAD # => sha1 or "ref: refs/heads/master"
+      4) if matches refs/heads/<branch>, proceed with <branch>
+      5) try to get $ git config branch.<branch>.remote => <origin-shortcut>
+      6) url is: $ git config remote.<origin-shortcut>.url 
+      If any step fails, set url to an empty string. Ask user to confirm settings.
+      Save to $ git config ampoule.url
+    
+    Update inner repo:
+    
+      $ cd .git/ampoule-tasks; git fetch <origin> ampoule-tasks:ampoule-tasks 
+    
+    Push updates:
+    
+      $ cd .git/ampoule-tasks; git push <origin> ampoule-tasks:ampoule-tasks
+
+- !ruby/struct:Ampoule::Comment 
+  author: Oleg Andreev
+  date: 2009-11-02 08:53:27.080978 +01:00
+  status: 
+  body: |
+    Do not checkout files on clone:
+    
+     $ git clone -n -s . .git/ampoule 
+
