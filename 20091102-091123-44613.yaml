@@ -1,0 +1,13 @@
+--- !ruby/struct:Ampoule::Task 
+title: test ampole
+priority: today
+assigned_to: Yurii Rashkovskii
+status: opened
+created_at: 2009-11-02 09:11:23.502681 -08:00
+modified_at: 2009-11-02 09:11:23.501274 -08:00
+comments: 
+- !ruby/struct:Ampoule::Comment 
+  author: Yurii Rashkovskii
+  date: 2009-11-02 09:11:23.503441 -08:00
+  status: opened
+  body: ""
