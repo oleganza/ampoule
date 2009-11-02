@@ -2,9 +2,9 @@
 title: ampoule inside a regular project repository
 priority: this week
 assigned_to: Oleg Andreev
-status: opened
+status: closed
 created_at: 2009-10-30 19:57:13.513260 +01:00
-modified_at: 2009-11-02 13:30:29.467546 +01:00
+modified_at: 2009-11-02 17:18:20.493176 +01:00
 comments: 
 - !ruby/struct:Ampoule::Comment 
   author: Oleg Andreev
@@ -65,3 +65,8 @@ comments:
     
      $ git clone -n -s . .git/ampoule 
 
+- !ruby/struct:Ampoule::Comment 
+  author: Oleg Andreev
+  date: 2009-11-02 17:18:20.496231 +01:00
+  status: closed
+  body: done!
