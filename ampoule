@@ -988,12 +988,13 @@ module Ampoule
             input  { margin_left 0.6.em }
             input '[type="submit"]' do width 5.em; end
             select { margin_left 0.6.em }
-          end
-          
-          label do
-            font_size 0.9.em
-            margin_left 1.em
-            margin_right -0.5.em
+            
+            label do
+              font_size 0.9.em
+              margin_left 1.em
+              margin_right -0.5.em
+            end
+            
           end
           
           input '[type="submit"]' do
@@ -1013,7 +1014,7 @@ module Ampoule
             small {
               font :size => 1.em, :weight => :normal
               color "#999"
-              padding_left 0.9.em
+              padding_left 0.3.em
             }
           }
 
@@ -1067,7 +1068,7 @@ module Ampoule
       
       @puller = Thread.new do
         loop do
-          sleep(1 + rand(1))
+          sleep(1 + rand(4))
           @queue.push(:pull) if @queue.size < 1
         end
       end
