@@ -41,6 +41,7 @@ require 'CGI'
 require 'jcode'
 require 'thread'
 require 'yaml'
+require 'strscan'
 
 module Kernel
   def const(name, value = nil)
@@ -225,6 +226,48 @@ module Ampoule
       def h(text)
         CGI::escapeHTML(text)
       end
+      
+      def hlink(text, &blk)
+        scanner = StringScanner.new(text)
+        buffer = ""
+        entities = {
+          "<" => "&lt;",
+          ">" => "&gt;",
+          '"' => "&quot;",
+          '&' => "&amp;"
+        }
+        atmark = "@"
+        proto = "://"
+        mailto = "mailto:"    
+        while 1
+          return buffer if scanner.eos?
+          if s = scanner.scan_until(%r{[<>"&]|[\w\+\-_]+://|\w[\.\w]*@}um)
+            m = scanner.matched
+            l = m.size
+            r = 0..(-1 - l)
+            buffer << s[r]
+            if l == 1 # entity
+              buffer << entities[m]
+            else # url
+              url = m.dup
+              if s = scanner.scan(%r{[\w&\.,%;:_/\-\?\[\]=@]+[\w/]}um)
+                url << s
+              end
+              buffer << ((blk && yield(url)) || begin
+                url = CGI::escapeHTML(url)
+                pfx = nil
+                if url[atmark] && !url[proto]
+                  pfx = mailto
+                end
+                %{<a href="#{pfx}#{url}">#{url}</a>}
+              end)
+            end
+          else
+            buffer << scanner.rest
+            return buffer
+          end
+        end
+      end # hlink
       
       def to_s
         @buffer
@@ -494,37 +537,26 @@ module Ampoule
     def formatted_text(text)
       return "" if text.blank?
       text = text.gsub(/\r\n/, "\n").gsub(/\r/, "\n")
-      paragraphs = text.split(/\n\n+/)
-      text = paragraphs.map do |paragraph|
+      
+      # 1. Unwrap link to task 
+      text.gsub!(%r{http://localhost:\d+/(\d{8}-\d{6}-\d+)/?}, "task \\1")
+      
+      text = text.split(/\n\n+/).map do |paragraph|
         if paragraph[/^[ \t]+/]
-          %{<code><pre>#{h(paragraph)}</pre></code>}
+          %{<code><pre>#{hlink(paragraph)}</pre></code>}
         else
           %{<p>#{hbr(paragraph)}</p>}
         end
       end.join
-
-      # 1. Unwrap link to task 
-      text.gsub!(%r{http://localhost:\d+/(\d{8}-\d{6}-\d+)/?}, "task \\1")
-
+      
       # 2. Wrap task id into link
       text.gsub!(%r{((task|case|bug) (\d{8}-\d{6}-\d+))}, %{<a href="/\\3">\\1</a>})
-
-      # 3. Highlight other links
-      text.gsub!(%r{(http://[^\s<>\n\r]+)}) do
-        url = $1
-        last = url[-1,1]
-        if last =~ /[\.:;,?!]/
-          url = url[0..-2]
-        else
-          last = ""
-        end
-        %{<a href="#{url}">#{url}</a>#{last}}
-      end
+      
       text
     end # formatted_text
 
     def hbr(text)
-      h(text.strip).gsub(/\n/, "<br/>")
+      hlink(text.strip).gsub(/\n/, "<br/>")
     end
     
     def submit_button(attrs, &blk)
@@ -1287,3 +1319,10 @@ if $0 == __FILE__
     Ampoule::ServerInstance.start
   end
 end
+
+__END__
+
+
+
+
+
