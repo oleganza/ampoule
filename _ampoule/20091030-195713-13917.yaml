@@ -4,7 +4,7 @@ priority: this week
 assigned_to: Oleg Andreev
 status: opened
 created_at: 2009-10-30 19:57:13.513260 +01:00
-modified_at: 2009-11-02 00:38:26.364089 +01:00
+modified_at: 2009-11-02 08:53:27.078886 +01:00
 comments: 
 - !ruby/struct:Ampoule::Comment 
   author: Oleg Andreev
@@ -37,7 +37,7 @@ comments:
        2) Else: create a dangling branch and push it to the server.
     
     Guessing URL:
-      
+    
       1) $ git branch -r => "remotes/<origin-shortcut>/ampoule-tasks" 
       2) $ git config remote.<origin-shortcut>.url #=> url (if the remote branch already exists)
     
@@ -55,6 +55,13 @@ comments:
     Push updates:
     
       $ cd .git/ampoule-tasks; git push <origin> ampoule-tasks:ampoule-tasks
+
+- !ruby/struct:Ampoule::Comment 
+  author: Oleg Andreev
+  date: 2009-11-02 08:53:27.080978 +01:00
+  status: 
+  body: |
+    Do not checkout files on clone:
     
-    
+     $ git clone -n -s . .git/ampoule 
 
