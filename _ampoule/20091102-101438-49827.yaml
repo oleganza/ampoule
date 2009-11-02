@@ -4,7 +4,7 @@ priority: later
 assigned_to: "Gwendal Rou\xC3\xA9"
 status: opened
 created_at: 2009-11-02 10:14:38.478831 +01:00
-modified_at: 2009-11-02 10:16:17.940827 +01:00
+modified_at: 2009-11-02 10:16:40.286460 +01:00
 comments: 
 - !ruby/struct:Ampoule::Comment 
   author: Oleg Andreev
@@ -45,5 +45,17 @@ comments:
     
       code
     code
-    
+
+- !ruby/struct:Ampoule::Comment 
+  author: Oleg Andreev
+  date: 2009-11-02 10:16:40.289543 +01:00
+  status: 
+  body: |
+    Counting objects: 5, done.
+    Delta compression using up to 2 threads.
+    Compressing objects: 100% (3/3), done.
+    Writing objects: 100% (3/3), 380 bytes, done.
+    Total 3 (delta 1), reused 0 (delta 0)
+    To git@sss.pierlis.com:gitosis-admin.git
+       66aa640..db4e88b  master -> master
 
