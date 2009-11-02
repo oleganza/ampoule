@@ -2,9 +2,9 @@
 title: say hello
 priority: later
 assigned_to: "Gwendal Rou\xC3\xA9"
-status: opened
+status: closed
 created_at: 2009-11-02 10:14:38.478831 +01:00
-modified_at: 2009-11-02 13:14:44.377137 +01:00
+modified_at: 2009-11-02 18:22:07.954032 +01:00
 comments: 
 - !ruby/struct:Ampoule::Comment 
   author: Oleg Andreev
@@ -76,3 +76,8 @@ comments:
     [master 0d39c96] fixed css
      1 files changed, 9 insertions(+), 8 deletions(-)
 
+- !ruby/struct:Ampoule::Comment 
+  author: Oleg Andreev
+  date: 2009-11-02 18:22:07.957266 +01:00
+  status: closed
+  body: ""
