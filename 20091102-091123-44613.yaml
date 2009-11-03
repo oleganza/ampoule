@@ -1,10 +1,10 @@
 --- !ruby/struct:Ampoule::Task 
-title: test multipart data
+title: Untitled
 priority: today
 assigned_to: nobody
 status: opened
 created_at: 2009-11-02 18:11:23.502681 +01:00
-modified_at: 2009-11-03 17:06:54.328314 +01:00
+modified_at: 2009-11-03 17:07:33.260594 +01:00
 attachments: 
 - !ruby/struct:Ampoule::Attachment 
   name: css-test.rb
@@ -91,5 +91,10 @@ comments:
 - !ruby/struct:Ampoule::Comment 
   author: Oleg Andreev
   date: 2009-11-03 17:04:57.090070 +01:00
+  status: "assigned to "
+  body: ""
+- !ruby/struct:Ampoule::Comment 
+  author: Oleg Andreev
+  date: 2009-11-03 17:07:33.272254 +01:00
   status: "assigned to "
   body: ""
