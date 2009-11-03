@@ -1187,9 +1187,8 @@ module Ampoule
     end
     
     ensure_url = Proc.new do |url|
-      url = "" if url[%r{^(git|html)://}]
       url.or do
-        print "URL for the writable repository to push: "
+        print "URL for the repository to sync with: "
         while (s = gets).blank?; end
         s.strip
       end.strip
