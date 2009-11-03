@@ -1232,15 +1232,16 @@ module Ampoule
       commit = `cd .git/ampoule; echo "initial commit" | git commit-tree #{tree}`.strip
       `cd .git/ampoule; git reset --hard #{commit}`
       
-      push_cmd = "cd .git/ampoule; git push 2>&1"
-      push_result = `#{push_cmd}`
-      while !(push_result =~ /new branch.*ampoule-tasks.*ampoule-tasks/ui)
-        puts push_result
-        url = ensure_url[""]
-        configure[url]
-        push_result = `#{push_cmd}`
-      end
-      puts `cd .git/ampoule; git pull 2>&1`
+      # push_cmd = "cd .git/ampoule; git push 2>&1"
+      # push_result = `#{push_cmd}`
+      # while !(push_result =~ /new branch.*ampoule-tasks.*ampoule-tasks/ui)
+      #   puts push_result
+      #   url = ensure_url[""]
+      #   configure[url]
+      #   push_result = `#{push_cmd}`
+      # end
+      pull_result = `cd .git/ampoule; git pull 2>&1`
+      #puts pull_result
     end
     
     # TODO: ask for the user.name & store in .git/ampoule/.git/config
