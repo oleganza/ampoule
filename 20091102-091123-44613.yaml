@@ -3,11 +3,16 @@ title: test ampoule
 priority: today
 assigned_to: Yurii Rashkovskii
 status: opened
-created_at: 2009-11-02 09:11:23.502681 -08:00
-modified_at: 2009-11-02 09:13:19.196916 -08:00
+created_at: 2009-11-02 18:11:23.502681 +01:00
+modified_at: 2009-11-03 09:49:14.970670 +01:00
 comments: 
 - !ruby/struct:Ampoule::Comment 
   author: Yurii Rashkovskii
-  date: 2009-11-02 09:11:23.503441 -08:00
+  date: 2009-11-02 18:11:23.503441 +01:00
   status: opened
   body: ""
+- !ruby/struct:Ampoule::Comment 
+  author: Oleg Andreev
+  date: 2009-11-03 09:49:14.972192 +01:00
+  status: 
+  body: let's see how it syncs with readonly repo
