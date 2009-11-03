@@ -6,7 +6,7 @@
 # Ampoule is a minimal bug tracker based on Git.
 # 
 # To start, run ampoule executable inside any git repository. 
-# You will be asked for a writable URL if it could not be guessed from .git/config
+# You will be asked for a repository URL if it could not be guessed from .git/config
 # Tasks are stored in human-readable YAML format in a separate branch "ampoule-tasks". 
 # Your development history is never polluted with ampoule commits.
 #
@@ -57,7 +57,7 @@ end
 
 module Ampoule
   
-  const(:VERSION, "0.1")
+  const(:VERSION, "0.2")
   
   module GitHelper
     def git_user_name
@@ -76,7 +76,7 @@ module Ampoule
   
   module FileHelper
     include GitHelper
-        
+    
     def file_contents_for_path(path)
       $file_buffer.read(path).to_s.or { nil }
     end
@@ -366,7 +366,7 @@ module Ampoule
   module ModelClassMethods
     def default(name, &blk)
       send(:define_method, name) do
-        super.or(instance_eval(&blk))
+        super.or { instance_eval(&blk) }
       end
     end
   end
@@ -410,10 +410,7 @@ module Ampoule
     default(:assigned_to) { "nobody" }
     default(:created_at)  { Time.now }
     default(:modified_at) { Time.now }
-    
-    def comments
-      super.or { self.comments = [] }
-    end
+    default(:comments)    { self.comments = [] }
     
     def status
       super == CLOSED ? CLOSED : OPENED
@@ -453,10 +450,27 @@ module Ampoule
     end
   end
   
-  class Comment < Model(:author, :date, :status, :body)
+  class Comment < Model(:author, :date, :status, :body, :attachments)
     default(:date) { Time.now }
+    default(:attachments) { self.attachments = [] }
+    
     def body
       super.to_s
+    end
+  end
+  
+  class Attachment < Model(:name, :local_filename, :size)
+    default(:name) { "Untitled" }
+    default(:local_filename) { self.local_filename = rand(2**128).to_s }
+    default(:size) { 0 }
+    
+    def store_file(data)
+      folder = ".git/ampoule/attachments"
+      if !File.readable?(folder)
+        Dir.mkdir(folder)
+      end
+      $file_buffer.write("#{folder}/" + local_filename, data)
+      self
     end
   end
   
@@ -477,6 +491,28 @@ module Ampoule
       r = request.query[param.to_s] || default
       return r.to_s if r.is_a?(String) # fight WEBrick::HTTPUtils::FormData 
       r
+    end
+    
+    class Upload < Ampoule::Model(:name, :filename, :data)
+      default(:filename) { rand(2**128).to_s }
+      def size
+        data ? data.size : 0
+      end
+    end
+    
+    def uploaded_files(param = "file[]")
+      r = request.query[param.to_s] || nil
+      if r
+        a = []
+        r.each_data do |d|
+          if d && d.size > 0
+            a << Upload.new(:name => d.name, :filename => d.filename, :data => d)
+          end
+        end
+        a
+      else
+        []
+      end
     end
     
     def get!
@@ -591,7 +627,40 @@ module Ampoule
       task_id = attrs[:task_id] or raise(ArgumentError, ":task_id is not specified!")
       assign_tag({:onchange => "return onReassign(this, #{task_id.inspect});"}.merge(attrs))
     end
-
+    
+    def pretty_file_size(bytes)
+      kbs = bytes / 1024.0
+      mbs = kbs / 1024.0
+      return ("%.1f Mb" % mbs) if mbs > 0.9
+      return ("%.1f Kb" % kbs) if kbs > 0.9
+      "#{bytes.to_i} bytes"
+    end
+    
+    def attachments(comment)
+      div :class => "attachments" do
+        pictures, files = comment.attachments.partition{|a| a.name =~ /\.(png|jpeg|jpg|gif|tiff|bmp|svg)$/ }
+        pwd = Dir.pwd
+        url_prefix = %{/attachments/}
+        files.each do |f|
+          div :class => "file attachment" do
+            a(:href => "#{url_prefix}#{f.local_filename}") { h(f.name) }
+            puts " "
+            span { pretty_file_size(f.size) }
+          end
+        end
+        div :class => "pictures" do
+          pictures.each do |f|
+            div :class => "picture attachment" do
+              a(:href => "#{url_prefix}#{f.local_filename}") { 
+                img(:src => "#{url_prefix}#{f.local_filename}", :border => "0")
+              }
+            end
+          end
+          ""
+        end
+      end
+    end
+    
   end # LayoutHelpers
   
   class AppController < Controller
@@ -656,6 +725,18 @@ module Ampoule
                   form.appendChild(assignedTo)
                   form.appendChild(taskIdTag)
                   form.submit()
+                }
+                function addAnotherFileField(field)
+                {
+                  var parent = field.parentNode
+                  var newField = document.createElement("input")
+                  newField.setAttribute("type", "file")
+                  newField.setAttribute("name", field.getAttribute("name"))
+                  newField.setAttribute("onchange", field.getAttribute("onchange"))
+                  field.setAttribute("onchange", "")
+                  var br = document.createElement("br")
+                  parent.insertBefore(br, field.nextSibling)
+                  parent.insertBefore(newField, br)
                 }
               }
             end
@@ -773,7 +854,7 @@ module Ampoule
               
         small(:style => %{position:absolute; top:1em;}) { a(:href => "/") { project_title + " index" } }
         
-        form(:action => "/#{task.id}", :method => :POST, :class => 'edit-task') do
+        form(:action => "/#{task.id}", :method => :POST, :class => 'edit-task', :enctype => "multipart/form-data") do
           h1 { input(:name => :title, :value => task.title, :class => "task-title") }
           
           div :class => "comments" do
@@ -784,6 +865,7 @@ module Ampoule
                 small { comment.status.to_s + " " + comment.date.to_relative_string }
               end
               puts(formatted_text(comment.body))
+              attachments(comment)
             end
             ""
           end
@@ -809,15 +891,33 @@ module Ampoule
               submit_button(:name => :reopen, :value => :Reopen, :disabled => task.opened?)
             end
           end
+          
+          div :class => "upload panel" do
+            input :type => "file", :name => "file[]", :onchange => "addAnotherFileField(this); return true"
+          end
         end # form
         
       end # super do
     end # read
-        
+    
+    def safe_filename(n)
+      ext = $1 if n =~ /(\.\w+)$/
+      "#{rand(2**128).to_s(16)}#{ext}"
+    end
+    
     def post
       current_person = param(:current_person)
       if current_person != current_user_name && !current_person.blank?
         self.current_user_name = current_person # remember new value
+      end
+      
+      attachments = []
+      uploaded_files.each do |f|
+        attachment = Attachment.new(:name => f.filename,
+                                    :local_filename => safe_filename(f.filename),
+                                    :size => f.size)
+        attachment.store_file(f.data)
+        attachments << attachment
       end
       
       task.title = param(:title)
@@ -844,16 +944,21 @@ module Ampoule
       end
       
       comment_body = param(:comment)
-      if !status.blank? || !comment_body.blank?
+      if !status.blank? || !comment_body.blank? || !attachments.blank?
         comment = Comment.new(:author => current_user_name,
                               :status => status,
-                              :body   => comment_body)
+                              :body   => comment_body,
+                              :attachments => attachments)
         task.add_comment(comment)
       end
       
       save_task(task)
       
-      redirect_to "/"
+      if status_changed
+        redirect_to "/"
+      else
+        redirect_to request.path
+      end
     end
     
   end # TaskController
@@ -1013,6 +1118,17 @@ module Ampoule
               font :size => "100%", :family => app_font_family
             end
           end
+          
+          div ".panel.upload" do
+            padding_top  1.em
+            margin_left  -1.px
+            overflow :visible
+            font :size => 0.9.em
+            input do
+              display :block
+              margin_bottom 10.px
+            end
+          end
 
           div ".status-buttons" do
             float :left
@@ -1061,6 +1177,36 @@ module Ampoule
             width "70%"
             line_height "130%"
           }
+          
+          div ".attachments" do
+            position :relative
+            xoverflow :hidden
+            margin "5px 0"
+            font :size => 0.9.em 
+            
+            div ".file.attachment" do
+              margin "0px 0 5px 0"
+              span do
+                font :size => 0.85.em
+                color "#666"
+              end
+            end
+            
+            div ".pictures" do
+              position :relative
+              # overflow :hidden
+              # padding "20px"
+              # margin "-20px"
+            end
+            
+            img do
+              #float :left
+              margin "10px 15px 10px 0"
+              _webkit_box_shadow "#666 0px 5px 40px"
+              max_width "70%"
+            end
+          end
+          
         end
         
       end # builder
@@ -1094,57 +1240,122 @@ module Ampoule
   end
   
   #
-  # Helpers
+  # Other
   #  
   
-  class FileSyncBuffer
+  class Actor
+    attr_accessor :queue
+
+    def self.new_instance(*args)
+      actor = self.allocate
+      actor.send(:initialize, *args)
+      actor
+    end
+
+    def self.new(*args)
+      Receiver.new(new_instance(*args))
+    end
+
     def initialize
-      @buffer = {} # path => content
       @queue = Queue.new
-      @mutex = Mutex.new
-      
-      if !ENV["AMPOULE_NOPULL"]
-        @puller = Thread.new do
-          loop do
-            sleep(1 + rand(4))
-            @queue.push(:pull) if @queue.size < 1
-          end
+      @thread = Thread.new do
+        loop do
+          msg, args, blk = @queue.pop
+          send(msg, *(args||[]), &blk)
         end
       end
-      
-      @pusher = Thread.new do
-        while msg = @queue.pop
-          if msg == :stop
-            puts "Ampoule::FileSyncBuffer: stopped."
-            break
-          end
+      @thread.abort_on_exception = true
+    end
+    
+    def stop; @thread.join; end
+    def kill; @thread.kill; end
+    
+    class Receiver
+      def initialize(actor)
+        @actor = actor
+      end
+      def send(name, *args, &blk)
+        @actor.queue.push([name, args, blk])
+        self
+      end
+      def method_missing(name, *args, &blk)
+        send(name, *args, &blk)
+      end
+      def stop
+        @actor.queue.clear
+        send(:kill)
+        @actor.stop
+      end
+    end
 
-          `cd .git/ampoule; git pull`
-          
-          if msg == :push
-                      
-            paths = []
-            @mutex.synchronize do
-              @buffer.each do |path, data|
-                paths << path
-                File.open(path, 'w'){|f|f.write(data)}
-              end
-              @buffer = {}
-            end
-            
-            if !ENV["AMPOULE_NOPUSH"]
-              `cd .git/ampoule; git add .; git commit -m "synced #{paths.join(', ')}"; git push`
-            end
-          end
+  end
+  
+  class FileSyncBuffer
+    
+    class Pusher < Actor
+      def push
+        # do not push if head did not change
+        new_head = (File.read(".git/ampoule/.git/refs/heads/ampoule-tasks") rescue nil)
+        if @head != new_head
+          @head = new_head
+          system %{cd .git/ampoule; git pull; git push} if !ENV["AMPOULE_NOPUSH"]
         end
       end
     end
     
+    class Commiter < Actor
+      def initialize(pusher, buffer, mutex)
+        super()
+        @pusher = pusher
+        @buffer = buffer
+        @mutex  = mutex
+      end
+      def commit
+        system "cd .git/ampoule; git pull"
+        paths = []
+        @mutex.synchronize do
+          @buffer.each do |path, data|
+            paths << path
+            File.open(path, 'w'){|f|f.write(data)}
+          end
+          @buffer.update({})
+        end
+        system %{cd .git/ampoule; git add .; git commit -m "synced #{paths.join(', ')}";}
+        @pusher.push
+      end
+    end
+    
+    class Puller < Actor
+      def initialize(interval = 1)
+        super()
+        @interval = interval
+        self.queue.push([:pull])
+      end
+      def pull
+        r = `cd .git/ampoule; git pull` if !ENV["AMPOULE_NOPULL"]
+        if r.strip !~ /^Already up-to-date\.?/
+          puts r
+        end
+        sleep(rand(@interval*2))
+        self.queue.push([:pull])
+      end
+    end
+    
+    def initialize
+      @buffer = {} # path => content
+      @mutex = Mutex.new
+      @pusher = Pusher.new
+      @commiter = Commiter.new(@pusher, @buffer, @mutex)
+      @puller = Puller.new
+      @puller.pull
+    end
+    
     def stop
       puts "Ampoule::FileSyncBuffer: stopping..."
-      @queue.push :stop
-      @puller.kill if @puller
-      @pusher.join
+      @puller.stop
+      @commiter.stop
+      @pusher.stop
+      puts "Ampoule::FileSyncBuffer: stopped."
     end
     
     def read(path)
@@ -1155,9 +1366,10 @@ module Ampoule
     
     def write(path, data)
       @mutex.synchronize do
+        puts "Buffered #{data.size} bytes to #{path}" if ENV["DEBUG"]
         @buffer[path] = data
       end
-      @queue.push(:push)
+      @commiter.commit
     end
     
     def glob(wildcard)
@@ -1187,9 +1399,8 @@ module Ampoule
     end
     
     ensure_url = Proc.new do |url|
-      url = "" if url[%r{^(git|html)://}]
       url.or do
-        print "URL for the writable repository to push: "
+        print "URL for the repository to sync with: "
         while (s = gets).blank?; end
         s.strip
       end.strip
@@ -1198,7 +1409,7 @@ module Ampoule
     configure = Proc.new do |url|
       `cd .git/ampoule; git config remote.origin.url #{url}`
       `cd .git/ampoule; git config remote.origin.fetch +refs/heads/ampoule-tasks:refs/remotes/origin/ampoule-tasks`
-      `cd .git/ampoule; git config remote.origin.push ampoule-tasks:ampoule-tasks`
+      `cd .git/ampoule; git config remote.origin.push ampoule-tasks:refs/heads/ampoule-tasks`
       
       `cd .git/ampoule; git config branch.ampoule-tasks.remote origin`
       `cd .git/ampoule; git config branch.ampoule-tasks.merge refs/heads/ampoule-tasks`
@@ -1232,15 +1443,7 @@ module Ampoule
       commit = `cd .git/ampoule; echo "initial commit" | git commit-tree #{tree}`.strip
       `cd .git/ampoule; git reset --hard #{commit}`
       
-      push_cmd = "cd .git/ampoule; git push 2>&1"
-      push_result = `#{push_cmd}`
-      while !(push_result =~ /new branch.*ampoule-tasks.*ampoule-tasks/ui)
-        puts push_result
-        url = ensure_url[""]
-        configure[url]
-        push_result = `#{push_cmd}`
-      end
-      puts `cd .git/ampoule; git pull 2>&1`
+      pull_result = `cd .git/ampoule; git pull 2>&1`
     end
     
     # TODO: ask for the user.name & store in .git/ampoule/.git/config
@@ -1253,12 +1456,18 @@ module Ampoule
       @port = @opts[:port].to_i
       $file_buffer = FileSyncBuffer.new
       begin
-        @server = WEBrick::HTTPServer.new(:Port => @port)
+        @server = WEBrick::HTTPServer.new(
+          :BindAddress => "127.0.0.1", # so it is not accessible from outside
+          :Port => @port,
+          :Logger => WEBrick::Log.new(nil, ENV["DEBUG"] ? WEBrick::BasicLog::DEBUG : WEBrick::BasicLog::WARN),
+          :AccessLog => (ENV["DEBUG"] ? nil : [])
+        )
       rescue Errno::EADDRINUSE
         @port += 1
-        puts "Ampoule::Server: trying to bind to port #{@port}..."
+        $stderr.puts "Ampoule::Server: trying to bind to port #{@port}..."
         retry
       end
+      @server.mount "/attachments", WEBrick::HTTPServlet::FileHandler, Dir.pwd+"/.git/ampoule/attachments"
       @server.mount "/", WebrickHandle, self
     end
     

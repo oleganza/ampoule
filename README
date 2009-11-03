@@ -5,7 +5,7 @@ ABOUT
 Ampoule is a minimal bug tracker based on Git.
 
 To start, run ampoule executable inside any git repository. 
-You will be asked for a writable URL if it could not be guessed from .git/config
+You will be asked for a repository URL if it could not be guessed from .git/config
 Tasks are stored in a human-readable YAML format in a separate branch "ampoule-tasks". 
 Your development history is never polluted with ampoule commits.
 
