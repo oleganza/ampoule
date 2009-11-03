@@ -4,7 +4,7 @@ priority: today
 assigned_to: Oleg Andreev
 status: opened
 created_at: 2009-11-02 18:11:23.502681 +01:00
-modified_at: 2009-11-03 17:40:11.101821 +01:00
+modified_at: 2009-11-03 18:38:09.144015 +01:00
 comments: 
 - !ruby/struct:Ampoule::Comment 
   author: Yurii Rashkovskii
@@ -200,3 +200,21 @@ comments:
     name: css-test.rb
     local_filename: 32edddbd43c1fc6f3e609310eed22c6b.rb
     size: 2815
+- !ruby/struct:Ampoule::Comment 
+  author: Oleg Andreev
+  date: 2009-11-03 18:38:09.226835 +01:00
+  status: 
+  body: "small pictures "
+  attachments: 
+  - !ruby/struct:Ampoule::Attachment 
+    name: itunes-next-button.png
+    local_filename: 4191b92dfbc923c652efc956bba6aa2e.png
+    size: 28748
+  - !ruby/struct:Ampoule::Attachment 
+    name: wifi-metrocom-internet.png
+    local_filename: ff860d060921894008f5ad079993a7b6.png
+    size: 14022
+  - !ruby/struct:Ampoule::Attachment 
+    name: swissair-meals.png
+    local_filename: 3f73a2caa1cbb1f7093b95093bcc01dd.png
+    size: 71902
