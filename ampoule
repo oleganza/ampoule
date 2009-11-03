@@ -657,6 +657,18 @@ module Ampoule
                   form.appendChild(taskIdTag)
                   form.submit()
                 }
+                function addAnotherFileField(field)
+                {
+                  var parent = field.parentNode
+                  var newField = document.createElement("input")
+                  newField.setAttribute("type", "file")
+                  newField.setAttribute("name", field.getAttribute("name"))
+                  newField.setAttribute("onchange", field.getAttribute("onchange"))
+                  field.setAttribute("onchange", "")
+                  var br = document.createElement("br")
+                  parent.insertBefore(br, field.nextSibling)
+                  parent.insertBefore(newField, br)
+                }
               }
             end
             
@@ -811,9 +823,7 @@ module Ampoule
           end
           
           div :class => "upload panel" do
-            input :type => "file", :name => "file[]", :onchange => ""
-            br
-            input :type => "file", :name => "file[]"
+            input :type => "file", :name => "file[]", :onchange => "addAnotherFileField(this); return true"
           end
         end # form
         
@@ -1026,10 +1036,13 @@ module Ampoule
             end
           end
           
-          div ".upload" do
+          div ".panel.upload" do
             padding_top  1.em
+            margin_left  -1.px
+            overflow :visible
             font :size => 0.9.em
             input do
+              display :block
               margin_bottom 10.px
             end
           end
