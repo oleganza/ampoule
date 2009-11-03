@@ -4,10 +4,15 @@ priority: never
 assigned_to: Oleg Andreev
 status: opened
 created_at: 2009-11-01 14:33:23.082255 +01:00
-modified_at: 2009-11-01 14:33:28.154379 +01:00
+modified_at: 2009-11-03 11:41:50.723466 +01:00
 comments: 
 - !ruby/struct:Ampoule::Comment 
   author: Oleg Andreev
   date: 2009-11-01 14:33:23.083072 +01:00
   status: opened
   body: ""
+- !ruby/struct:Ampoule::Comment 
+  author: Oleg Andreev
+  date: 2009-11-03 11:41:50.725518 +01:00
+  status: 
+  body: test
