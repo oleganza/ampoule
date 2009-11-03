@@ -4,7 +4,7 @@ priority: today
 assigned_to: nobody
 status: opened
 created_at: 2009-11-02 18:11:23.502681 +01:00
-modified_at: 2009-11-03 17:10:14.952882 +01:00
+modified_at: 2009-11-03 17:12:44.530048 +01:00
 attachments: 
 - !ruby/struct:Ampoule::Attachment 
   name: css-test.rb
@@ -17,6 +17,10 @@ attachments:
 - !ruby/struct:Ampoule::Attachment 
   name: css-test.rb
   local_filename: "149856729428695895625001733042546788106"
+  size: 2815
+- !ruby/struct:Ampoule::Attachment 
+  name: css-test.rb
+  local_filename: "180243905937214210324666205007620675079"
   size: 2815
 comments: 
 - !ruby/struct:Ampoule::Comment 
@@ -107,3 +111,8 @@ comments:
   date: 2009-11-03 17:10:14.961586 +01:00
   status: 
   body: ""
+- !ruby/struct:Ampoule::Comment 
+  author: Oleg Andreev
+  date: 2009-11-03 17:12:44.543316 +01:00
+  status: 
+  body: test
