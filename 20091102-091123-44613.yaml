@@ -1,57 +1,46 @@
 --- !ruby/struct:Ampoule::Task 
-title: asdas asd
+title: Untitled
 priority: today
 assigned_to: nobody
 status: opened
 created_at: 2009-11-02 18:11:23.502681 +01:00
-modified_at: 2009-11-03 17:15:06.797058 +01:00
-attachments: 
-- !ruby/struct:Ampoule::Attachment 
-  name: css-test.rb
-  local_filename: "105229351252162288365733316542337358751"
-  size: 2815
-- !ruby/struct:Ampoule::Attachment 
-  name: Screen shot 2009-11-03 at 9.00.09 .png
-  local_filename: "102616046140421437115559963259479174013"
-  size: 271813
-- !ruby/struct:Ampoule::Attachment 
-  name: css-test.rb
-  local_filename: "149856729428695895625001733042546788106"
-  size: 2815
-- !ruby/struct:Ampoule::Attachment 
-  name: css-test.rb
-  local_filename: "180243905937214210324666205007620675079"
-  size: 2815
-- !ruby/struct:Ampoule::Attachment 
-  name: css-test.rb
-  local_filename: e49c75f0d2394ea21a44a38c65486362.rb
-  size: 2815
+modified_at: 2009-11-03 17:19:41.425516 +01:00
 comments: 
 - !ruby/struct:Ampoule::Comment 
   author: Yurii Rashkovskii
   date: 2009-11-02 18:11:23.503441 +01:00
   status: opened
   body: ""
+  attachments: []
+
 - !ruby/struct:Ampoule::Comment 
   author: Oleg Andreev
   date: 2009-11-03 09:49:14.972192 +01:00
   status: 
   body: let's see how it syncs with readonly repo
+  attachments: []
+
 - !ruby/struct:Ampoule::Comment 
   author: Oleg Andreev
   date: 2009-11-03 09:49:38.863647 +01:00
   status: 
   body: it took about 5 secs.
+  attachments: []
+
 - !ruby/struct:Ampoule::Comment 
   author: Oleg Andreev
   date: 2009-11-03 09:50:00.440714 +01:00
   status: 
   body: 2 sec for push and 3 for pull
+  attachments: []
+
 - !ruby/struct:Ampoule::Comment 
   author: Oleg Andreev
   date: 2009-11-03 11:42:34.077692 +01:00
   status: 
   body: new actors test
+  attachments: []
+
 - !ruby/struct:Ampoule::Comment 
   author: Oleg Andreev
   date: 2009-11-03 11:44:18.211515 +01:00
@@ -63,6 +52,8 @@ comments:
     Your configuration specifies to merge the ref 'ampoule-tasks' from the
     remote, but no such ref was fetched.
 
+  attachments: []
+
 - !ruby/struct:Ampoule::Comment 
   author: Oleg Andreev
   date: 2009-11-03 11:59:03.366019 +01:00
@@ -70,58 +61,89 @@ comments:
   body: |
     test less verbose output
 
+  attachments: []
+
 - !ruby/struct:Ampoule::Comment 
   author: Oleg Andreev
   date: 2009-11-03 12:01:31.812885 +01:00
   status: assigned to Oleg Andreev
   body: test stderr
+  attachments: []
+
 - !ruby/struct:Ampoule::Comment 
   author: Oleg Andreev
   date: 2009-11-03 12:10:45.532283 +01:00
   status: "assigned to "
   body: ""
+  attachments: []
+
 - !ruby/struct:Ampoule::Comment 
   author: Oleg Andreev
   date: 2009-11-03 12:12:59.948841 +01:00
   status: 
   body: test2
+  attachments: []
+
 - !ruby/struct:Ampoule::Comment 
   author: Oleg Andreev
   date: 2009-11-03 12:13:43.031255 +01:00
   status: 
   body: test3
+  attachments: []
+
 - !ruby/struct:Ampoule::Comment 
   author: Oleg Andreev
   date: 2009-11-03 12:14:16.761649 +01:00
   status: 
   body: file upload test
+  attachments: []
+
 - !ruby/struct:Ampoule::Comment 
   author: Oleg Andreev
   date: 2009-11-03 16:58:01.657029 +01:00
   status: 
   body: ""
+  attachments: []
+
 - !ruby/struct:Ampoule::Comment 
   author: Oleg Andreev
   date: 2009-11-03 17:04:57.090070 +01:00
   status: "assigned to "
   body: ""
+  attachments: []
+
 - !ruby/struct:Ampoule::Comment 
   author: Oleg Andreev
   date: 2009-11-03 17:07:33.272254 +01:00
   status: "assigned to "
   body: ""
+  attachments: []
+
 - !ruby/struct:Ampoule::Comment 
   author: Oleg Andreev
   date: 2009-11-03 17:10:14.961586 +01:00
   status: 
   body: ""
+  attachments: []
+
 - !ruby/struct:Ampoule::Comment 
   author: Oleg Andreev
   date: 2009-11-03 17:12:44.543316 +01:00
   status: 
   body: test
+  attachments: []
+
 - !ruby/struct:Ampoule::Comment 
   author: Oleg Andreev
   date: 2009-11-03 17:15:06.808818 +01:00
   status: 
   body: ""
+  attachments: []
+
+- !ruby/struct:Ampoule::Comment 
+  author: Oleg Andreev
+  date: 2009-11-03 17:19:41.436387 +01:00
+  status: "assigned to "
+  body: ""
+  attachments: []
+
