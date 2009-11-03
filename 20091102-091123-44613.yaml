@@ -4,7 +4,7 @@ priority: today
 assigned_to: Yurii Rashkovskii
 status: opened
 created_at: 2009-11-02 18:11:23.502681 +01:00
-modified_at: 2009-11-03 11:44:18.208744 +01:00
+modified_at: 2009-11-03 11:59:03.362275 +01:00
 comments: 
 - !ruby/struct:Ampoule::Comment 
   author: Yurii Rashkovskii
@@ -41,4 +41,11 @@ comments:
     Warning: commit c036248ebbb5d66a7d6af8b596a33dbb559736a7.
     Your configuration specifies to merge the ref 'ampoule-tasks' from the
     remote, but no such ref was fetched.
+
+- !ruby/struct:Ampoule::Comment 
+  author: Oleg Andreev
+  date: 2009-11-03 11:59:03.366019 +01:00
+  status: 
+  body: |
+    test less verbose output
 
