@@ -773,7 +773,7 @@ module Ampoule
               
         small(:style => %{position:absolute; top:1em;}) { a(:href => "/") { project_title + " index" } }
         
-        form(:action => "/#{task.id}", :method => :POST, :class => 'edit-task') do
+        form(:action => "/#{task.id}", :method => :POST, :class => 'edit-task', :enctype => "multipart/form-data") do
           h1 { input(:name => :title, :value => task.title, :class => "task-title") }
           
           div :class => "comments" do
@@ -809,6 +809,12 @@ module Ampoule
               submit_button(:name => :reopen, :value => :Reopen, :disabled => task.opened?)
             end
           end
+          
+          div :class => "upload panel" do
+            input :type => "file", :name => "file[]", :onchange => ""
+            br
+            input :type => "file", :name => "file[]"
+          end
         end # form
         
       end # super do
@@ -819,6 +825,8 @@ module Ampoule
       if current_person != current_user_name && !current_person.blank?
         self.current_user_name = current_person # remember new value
       end
+      
+      p request.query
       
       task.title = param(:title)
       task.priority = param(:priority)
@@ -853,7 +861,11 @@ module Ampoule
       
       save_task(task)
       
-      redirect_to "/"
+      if status_changed
+        redirect_to "/"
+      else
+        redirect_to "/#{task.id}"
+      end
     end
     
   end # TaskController
@@ -1011,6 +1023,14 @@ module Ampoule
             margin_bottom 0.5.em
             input ", select" do 
               font :size => "100%", :family => app_font_family
+            end
+          end
+          
+          div ".upload" do
+            padding_top  1.em
+            font :size => 0.9.em
+            input do
+              margin_bottom 10.px
             end
           end
 
