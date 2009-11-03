@@ -1094,57 +1094,119 @@ module Ampoule
   end
   
   #
-  # Helpers
+  # Other
   #  
   
-  class FileSyncBuffer
+  class Actor
+    attr_accessor :queue
+
+    def self.new_instance(*args)
+      actor = self.allocate
+      actor.send(:initialize, *args)
+      actor
+    end
+
+    def self.new(*args)
+      Receiver.new(new_instance(*args))
+    end
+
     def initialize
-      @buffer = {} # path => content
       @queue = Queue.new
-      @mutex = Mutex.new
-      
-      if !ENV["AMPOULE_NOPULL"]
-        @puller = Thread.new do
-          loop do
-            sleep(1 + rand(4))
-            @queue.push(:pull) if @queue.size < 1
-          end
+      @thread = Thread.new do
+        loop do
+          msg, args, blk = @queue.pop
+          send(msg, *(args||[]), &blk)
         end
       end
-      
-      @pusher = Thread.new do
-        while msg = @queue.pop
-          if msg == :stop
-            puts "Ampoule::FileSyncBuffer: stopped."
-            break
-          end
+      @thread.abort_on_exception = true
+    end
+    
+    def stop; @thread.join; end
+    def kill; @thread.kill; end
+    
+    class Receiver
+      def initialize(actor)
+        @actor = actor
+      end
+      def send(name, *args, &blk)
+        @actor.queue.push([name, args, blk])
+        self
+      end
+      def method_missing(name, *args, &blk)
+        send(name, *args, &blk)
+      end
+      def stop
+        @actor.queue.clear
+        send(:kill)
+        @actor.stop
+      end
+    end
 
-          `cd .git/ampoule; git pull`
-          
-          if msg == :push
-                      
-            paths = []
-            @mutex.synchronize do
-              @buffer.each do |path, data|
-                paths << path
-                File.open(path, 'w'){|f|f.write(data)}
-              end
-              @buffer = {}
-            end
-            
-            if !ENV["AMPOULE_NOPUSH"]
-              `cd .git/ampoule; git add .; git commit -m "synced #{paths.join(', ')}"; git push`
-            end
-          end
+  end
+  
+  class FileSyncBuffer
+    
+    class Pusher < Actor
+      def push
+        # do not push if head did not change
+        new_head = (File.read(".git/ampoule/.git/refs/heads/ampoule-tasks") rescue nil)
+        if @head != new_head
+          @head = new_head
+          system %{cd .git/ampoule; git pull; git push} if !ENV["AMPOULE_NOPUSH"]
         end
       end
     end
     
+    class Commiter < Actor
+      def initialize(pusher, buffer, mutex)
+        super()
+        @pusher = pusher
+        @buffer = buffer
+        @mutex  = mutex
+      end
+      def commit
+        system "cd .git/ampoule; git pull"
+        paths = []
+        @mutex.synchronize do
+          @buffer.each do |path, data|
+            paths << path
+            File.open(path, 'w'){|f|f.write(data)}
+          end
+          @buffer.update({})
+        end
+        system %{cd .git/ampoule; git add .; git commit -m "synced #{paths.join(', ')}";}
+        @pusher.push
+      end
+    end
+    
+    class Puller < Actor
+      def initialize(interval = 1)
+        super()
+        @interval = interval
+        self.queue.push([:pull])
+      end
+      def pull
+        puts `cd .git/ampoule; git pull` if !ENV["AMPOULE_NOPULL"]
+        sleep(rand(@interval*2))
+        self.queue.push([:pull])
+      end
+    end
+    
+    def initialize
+      @buffer = {} # path => content
+      @mutex = Mutex.new
+      @pusher = Pusher.new
+      @commiter = Commiter.new(@pusher, @buffer, @mutex)
+      @puller = Puller.new
+      @puller.pull
+    end
+    
     def stop
       puts "Ampoule::FileSyncBuffer: stopping..."
-      @queue.push :stop
-      @puller.kill if @puller
-      @pusher.join
+      @puller.stop
+      @commiter.stop
+      @pusher.stop
+      puts "Ampoule::FileSyncBuffer: stopped."
     end
     
     def read(path)
@@ -1157,7 +1219,7 @@ module Ampoule
       @mutex.synchronize do
         @buffer[path] = data
       end
-      @queue.push(:push)
+      @commiter.commit
     end
     
     def glob(wildcard)
@@ -1197,7 +1259,7 @@ module Ampoule
     configure = Proc.new do |url|
       `cd .git/ampoule; git config remote.origin.url #{url}`
       `cd .git/ampoule; git config remote.origin.fetch +refs/heads/ampoule-tasks:refs/remotes/origin/ampoule-tasks`
-      `cd .git/ampoule; git config remote.origin.push ampoule-tasks:ampoule-tasks`
+      `cd .git/ampoule; git config remote.origin.push ampoule-tasks:refs/heads/ampoule-tasks`
       
       `cd .git/ampoule; git config branch.ampoule-tasks.remote origin`
       `cd .git/ampoule; git config branch.ampoule-tasks.merge refs/heads/ampoule-tasks`

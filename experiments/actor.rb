@@ -23,7 +23,7 @@ class Actor
     end
   end
   
-  def join
+  def stop
     @thread.join
   end
   
@@ -56,9 +56,9 @@ class Actor
     def method_missing(name, *args, &blk)
       send(name, *args, &blk)
     end
-    def join
+    def stop
       send(:kill)
-      @actor.join
+      @actor.stop
     end
   end
   
@@ -85,7 +85,7 @@ if $0 == __FILE__
   pinger.ping!
   pinger.ping!
   
-  sleep 3
+  sleep 2
   
-  pinger.join
+  pinger.stop
 end
