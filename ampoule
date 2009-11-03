@@ -1186,7 +1186,10 @@ module Ampoule
         self.queue.push([:pull])
       end
       def pull
-        puts `cd .git/ampoule; git pull` if !ENV["AMPOULE_NOPULL"]
+        r = `cd .git/ampoule; git pull` if !ENV["AMPOULE_NOPULL"]
+        if r.strip !~ /^Already up-to-date\.?/
+          puts r
+        end
         sleep(rand(@interval*2))
         self.queue.push([:pull])
       end
@@ -1315,10 +1318,15 @@ module Ampoule
       @port = @opts[:port].to_i
       $file_buffer = FileSyncBuffer.new
       begin
-        @server = WEBrick::HTTPServer.new(:Port => @port)
+        @server = WEBrick::HTTPServer.new(
+          :BindAddress => "127.0.0.1", # so it is not accessible from outside
+          :Port => @port,
+          :Logger => WEBrick::Log.new(nil, ENV["DEBUG"] ? WEBrick::BasicLog::DEBUG : WEBrick::BasicLog::WARN),
+          :AccessLog => (ENV["DEBUG"] ? nil : [])
+        )
       rescue Errno::EADDRINUSE
         @port += 1
-        puts "Ampoule::Server: trying to bind to port #{@port}..."
+        $stderr.puts "Ampoule::Server: trying to bind to port #{@port}..."
         retry
       end
       @server.mount "/", WebrickHandle, self
