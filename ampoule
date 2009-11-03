@@ -57,7 +57,7 @@ end
 
 module Ampoule
   
-  const(:VERSION, "0.1")
+  const(:VERSION, "0.2")
   
   module GitHelper
     def git_user_name
