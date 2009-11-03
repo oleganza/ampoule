@@ -479,6 +479,28 @@ module Ampoule
       r
     end
     
+    class Upload < Ampoule::Model(:name, :filename, :data)
+      default(:filename) { rand(2**128).to_s }
+      def size
+        data ? data.size : 0
+      end
+    end
+    
+    def uploaded_files(param = "file[]")
+      r = request.query[param.to_s] || nil
+      if r
+        a = []
+        r.each_data do |d|
+          if d && d.size > 0
+            a << Upload.new(:name => d.name, :filename => d.filename, :data => d)
+          end
+        end
+        a
+      else
+        []
+      end
+    end
+    
     def get!
       response.body = get.to_s
     end
@@ -836,7 +858,12 @@ module Ampoule
         self.current_user_name = current_person # remember new value
       end
       
-      p request.query
+      # uploaded_files.each do |f|
+      #   p [f.filename, f.size]
+      # end
+      # 
+      # redirect_to request.path
+      # return
       
       task.title = param(:title)
       task.priority = param(:priority)
