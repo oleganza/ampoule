@@ -366,7 +366,7 @@ module Ampoule
   module ModelClassMethods
     def default(name, &blk)
       send(:define_method, name) do
-        super.or(instance_eval(&blk))
+        super.or { instance_eval(&blk) }
       end
     end
   end
@@ -410,10 +410,7 @@ module Ampoule
     default(:assigned_to) { "nobody" }
     default(:created_at)  { Time.now }
     default(:modified_at) { Time.now }
-    
-    def comments
-      super.or { self.comments = [] }
-    end
+    default(:comments)    { self.comments = [] }
     
     def status
       super == CLOSED ? CLOSED : OPENED
@@ -453,10 +450,27 @@ module Ampoule
     end
   end
   
-  class Comment < Model(:author, :date, :status, :body)
+  class Comment < Model(:author, :date, :status, :body, :attachments)
     default(:date) { Time.now }
+    default(:attachments) { self.attachments = [] }
+    
     def body
       super.to_s
+    end
+  end
+  
+  class Attachment < Model(:name, :local_filename, :size)
+    default(:name) { "Untitled" }
+    default(:local_filename) { self.local_filename = rand(2**128).to_s }
+    default(:size) { 0 }
+    
+    def store_file(data)
+      folder = ".git/ampoule/attachments"
+      if !File.readable?(folder)
+        Dir.mkdir(folder)
+      end
+      $file_buffer.write("#{folder}/" + local_filename, data)
+      self
     end
   end
   
@@ -613,7 +627,35 @@ module Ampoule
       task_id = attrs[:task_id] or raise(ArgumentError, ":task_id is not specified!")
       assign_tag({:onchange => "return onReassign(this, #{task_id.inspect});"}.merge(attrs))
     end
-
+    
+    def pretty_file_size(bytes)
+      kbs = bytes / 1024.0
+      mbs = kbs / 1024.0
+      return "%.1f Mb" % mbs if mbs > 0.9
+      return "%.1f Kb" % kbs if kbs > 0.9
+      "#{bytes.to_i} bytes"
+    end
+    
+    def attachments(comment)
+      pictures, files = comment.attachments.partition{|a| a.name =~ /\.(png|jpeg|jpg|gif|tiff|bmp|svg)$/ }
+      pwd = Dir.pwd
+      url_prefix = %{file://localhost#{pwd}/.git/ampoule/attachments/}
+      files.each do |f|
+        div :class => "file attachment" do
+          a(:href => "#{url_prefix}#{f.local_filename}") { h(f.name) }
+          #span { pretty_size(f.size) }
+        end
+      end
+      pictures.each do |f|
+        div :class => "picture attachment" do
+          a(:href => "#{url_prefix}#{f.local_filename}") { 
+            img(:src => "#{url_prefix}#{f.local_filename}", :border => "0")
+          }
+        end
+      end
+      ""
+    end
+    
   end # LayoutHelpers
   
   class AppController < Controller
@@ -818,6 +860,7 @@ module Ampoule
                 small { comment.status.to_s + " " + comment.date.to_relative_string }
               end
               puts(formatted_text(comment.body))
+              attachments(comment)
             end
             ""
           end
@@ -851,19 +894,26 @@ module Ampoule
         
       end # super do
     end # read
-        
+    
+    def safe_filename(n)
+      ext = $1 if n =~ /(\.\w+)$/
+      "#{rand(2**128).to_s(16)}#{ext}"
+    end
+    
     def post
       current_person = param(:current_person)
       if current_person != current_user_name && !current_person.blank?
         self.current_user_name = current_person # remember new value
       end
       
-      # uploaded_files.each do |f|
-      #   p [f.filename, f.size]
-      # end
-      # 
-      # redirect_to request.path
-      # return
+      attachments = []
+      uploaded_files.each do |f|
+        attachment = Attachment.new(:name => f.filename,
+                                    :local_filename => safe_filename(f.filename),
+                                    :size => f.size)
+        attachment.store_file(f.data)
+        attachments << attachment
+      end
       
       task.title = param(:title)
       task.priority = param(:priority)
@@ -889,10 +939,11 @@ module Ampoule
       end
       
       comment_body = param(:comment)
-      if !status.blank? || !comment_body.blank?
+      if !status.blank? || !comment_body.blank? || !attachments.blank?
         comment = Comment.new(:author => current_user_name,
                               :status => status,
-                              :body   => comment_body)
+                              :body   => comment_body,
+                              :attachments => attachments)
         task.add_comment(comment)
       end
       
@@ -901,7 +952,7 @@ module Ampoule
       if status_changed
         redirect_to "/"
       else
-        redirect_to "/#{task.id}"
+        redirect_to request.path
       end
     end
     
@@ -1280,6 +1331,7 @@ module Ampoule
     
     def write(path, data)
       @mutex.synchronize do
+        puts "Buffered #{data.size} bytes to #{path}" if ENV["DEBUG"]
         @buffer[path] = data
       end
       @commiter.commit
