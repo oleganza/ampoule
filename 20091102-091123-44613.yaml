@@ -1,10 +1,10 @@
 --- !ruby/struct:Ampoule::Task 
-title: test ampoule
+title: Untitled
 priority: today
-assigned_to: Oleg Andreev
+assigned_to: nobody
 status: opened
 created_at: 2009-11-02 18:11:23.502681 +01:00
-modified_at: 2009-11-03 12:01:31.808673 +01:00
+modified_at: 2009-11-03 12:10:45.525308 +01:00
 comments: 
 - !ruby/struct:Ampoule::Comment 
   author: Yurii Rashkovskii
@@ -54,3 +54,8 @@ comments:
   date: 2009-11-03 12:01:31.812885 +01:00
   status: assigned to Oleg Andreev
   body: test stderr
+- !ruby/struct:Ampoule::Comment 
+  author: Oleg Andreev
+  date: 2009-11-03 12:10:45.532283 +01:00
+  status: "assigned to "
+  body: ""
