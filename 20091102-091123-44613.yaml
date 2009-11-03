@@ -4,7 +4,7 @@ priority: today
 assigned_to: Oleg Andreev
 status: opened
 created_at: 2009-11-02 18:11:23.502681 +01:00
-modified_at: 2009-11-03 17:31:03.954372 +01:00
+modified_at: 2009-11-03 17:32:54.598396 +01:00
 comments: 
 - !ruby/struct:Ampoule::Comment 
   author: Yurii Rashkovskii
@@ -168,3 +168,21 @@ comments:
   body: "file test 2 "
   attachments: []
 
+- !ruby/struct:Ampoule::Comment 
+  author: Oleg Andreev
+  date: 2009-11-03 17:32:54.611994 +01:00
+  status: 
+  body: test 3
+  attachments: 
+  - !ruby/struct:Ampoule::Attachment 
+    name: css-test.rb
+    local_filename: e0918137f08101142070ea879b1f3f70.rb
+    size: 2815
+  - !ruby/struct:Ampoule::Attachment 
+    name: Screen shot 2009-11-03 at 9.00.09 .png
+    local_filename: 3fc035e6e77abb25b0d8dd9fb15a61a6.png
+    size: 271813
+  - !ruby/struct:Ampoule::Attachment 
+    name: Screen shot 2009-11-03 at 9.00.24 .png
+    local_filename: b422bbc143c08cbe15677cd6b00be924.png
+    size: 104301
