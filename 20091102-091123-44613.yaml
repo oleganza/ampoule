@@ -4,7 +4,7 @@ priority: today
 assigned_to: Yurii Rashkovskii
 status: opened
 created_at: 2009-11-02 18:11:23.502681 +01:00
-modified_at: 2009-11-03 09:50:00.438265 +01:00
+modified_at: 2009-11-03 11:42:34.074537 +01:00
 comments: 
 - !ruby/struct:Ampoule::Comment 
   author: Yurii Rashkovskii
@@ -26,3 +26,8 @@ comments:
   date: 2009-11-03 09:50:00.440714 +01:00
   status: 
   body: 2 sec for push and 3 for pull
+- !ruby/struct:Ampoule::Comment 
+  author: Oleg Andreev
+  date: 2009-11-03 11:42:34.077692 +01:00
+  status: 
+  body: new actors test
