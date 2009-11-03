@@ -648,14 +648,16 @@ module Ampoule
             span { pretty_file_size(f.size) }
           end
         end
-        pictures.each do |f|
-          div :class => "picture attachment" do
-            a(:href => "#{url_prefix}#{f.local_filename}") { 
-              img(:src => "#{url_prefix}#{f.local_filename}", :border => "0")
-            }
+        div :class => "pictures" do
+          pictures.each do |f|
+            div :class => "picture attachment" do
+              a(:href => "#{url_prefix}#{f.local_filename}") { 
+                img(:src => "#{url_prefix}#{f.local_filename}", :border => "0")
+              }
+            end
           end
+          ""
         end
-        ""
       end
     end
     
@@ -1190,8 +1192,16 @@ module Ampoule
               end
             end
             
+            div ".pictures" do
+              position :relative
+              # overflow :hidden
+              # padding "20px"
+              # margin "-20px"
+            end
+            
             img do
-              margin "10px 5px 5px 0"
+              #float :left
+              margin "10px 15px 10px 0"
               _webkit_box_shadow "#666 0px 5px 40px"
               max_width "70%"
             end
