@@ -4,7 +4,16 @@ priority: today
 assigned_to: nobody
 status: opened
 created_at: 2009-11-02 18:11:23.502681 +01:00
-modified_at: 2009-11-03 12:14:16.755710 +01:00
+modified_at: 2009-11-03 16:58:01.650278 +01:00
+attachments: 
+- !ruby/struct:Ampoule::Attachment 
+  name: css-test.rb
+  local_filename: "105229351252162288365733316542337358751"
+  size: 2815
+- !ruby/struct:Ampoule::Attachment 
+  name: Screen shot 2009-11-03 at 9.00.09 .png
+  local_filename: "102616046140421437115559963259479174013"
+  size: 271813
 comments: 
 - !ruby/struct:Ampoule::Comment 
   author: Yurii Rashkovskii
@@ -74,3 +83,8 @@ comments:
   date: 2009-11-03 12:14:16.761649 +01:00
   status: 
   body: file upload test
+- !ruby/struct:Ampoule::Comment 
+  author: Oleg Andreev
+  date: 2009-11-03 16:58:01.657029 +01:00
+  status: 
+  body: ""
