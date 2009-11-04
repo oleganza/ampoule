@@ -4,7 +4,7 @@ priority: today
 assigned_to: Oleg Andreev
 status: closed
 created_at: 2009-11-02 18:11:23.502681 +01:00
-modified_at: 2009-11-04 09:43:49.898651 +01:00
+modified_at: 2009-11-04 09:47:27.083918 +01:00
 comments: 
 - !ruby/struct:Ampoule::Comment 
   author: Yurii Rashkovskii
@@ -70,3 +70,21 @@ comments:
     name: swissair-meals.png
     local_filename: 3f73a2caa1cbb1f7093b95093bcc01dd.png
     size: 71902
+- !ruby/struct:Ampoule::Comment 
+  author: Oleg Andreev
+  date: 2009-11-04 09:47:27.090243 +01:00
+  status: 
+  body: ilyabirman player & other files
+  attachments: 
+  - !ruby/struct:Ampoule::Attachment 
+    name: ilyabirman-music-player.png
+    local_filename: ba3eff8fa1e6b5bc9ebfca4630669f82.png
+    size: 377583
+  - !ruby/struct:Ampoule::Attachment 
+    name: twitter-discussions.rb
+    local_filename: 98426625ae67c2ee50a2679759159ca5.rb
+    size: 4992
+  - !ruby/struct:Ampoule::Attachment 
+    name: History.txt
+    local_filename: 9bdea17ef01a95bffe49bdc5d5e21111.txt
+    size: 10153
