@@ -1,10 +1,10 @@
 --- !ruby/struct:Ampoule::Task 
 title: Untitled
 priority: today
-assigned_to: nobody
+assigned_to: Oleg Andreev
 status: closed
 created_at: 2009-11-02 18:11:23.502681 +01:00
-modified_at: 2009-11-04 09:36:08.020181 +01:00
+modified_at: 2009-11-04 09:36:32.864689 +01:00
 comments: 
 - !ruby/struct:Ampoule::Comment 
   author: Yurii Rashkovskii
@@ -383,6 +383,13 @@ comments:
   author: Oleg Andreev
   date: 2009-11-04 09:36:08.072554 +01:00
   status: "assigned to "
+  body: ""
+  attachments: []
+
+- !ruby/struct:Ampoule::Comment 
+  author: Oleg Andreev
+  date: 2009-11-04 09:36:30.467615 +01:00
+  status: assigned to Oleg Andreev
   body: ""
   attachments: []
 
