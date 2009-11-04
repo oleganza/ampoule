@@ -4,7 +4,7 @@ priority: today
 assigned_to: Oleg Andreev
 status: closed
 created_at: 2009-11-02 18:11:23.502681 +01:00
-modified_at: 2009-11-04 09:50:44.611398 +01:00
+modified_at: 2009-11-04 09:50:56.070704 +01:00
 comments: 
 - !ruby/struct:Ampoule::Comment 
   author: Yurii Rashkovskii
@@ -88,3 +88,10 @@ comments:
     name: History.txt
     local_filename: 9bdea17ef01a95bffe49bdc5d5e21111.txt
     size: 10153
+- !ruby/struct:Ampoule::Comment 
+  author: Oleg Andreev
+  date: 2009-11-04 09:50:55.776551 +01:00
+  status: 
+  body: "          div :class => \"buttons panel\" do\r\n            div :class => \"save-buttons\" do\r\n              label { \"assigned to \" }\r\n              assign_tag(:value => task.assigned_to)\r\n              label { \"priority \" }\r\n              select_tag(:name => :priority, :value => task.priority, :options => task.priorities)\r\n              submit_button(:name => :save, :value => :Save)\r\n            end\r\n            div :class => \"status-buttons\" do\r\n              submit_button(:name => :close, :value => :Close, :disabled => task.closed?)\r\n              submit_button(:name => :reopen, :value => :Reopen, :disabled => task.opened?)\r\n            end\r\n          end\r\n"
+  attachments: []
+
