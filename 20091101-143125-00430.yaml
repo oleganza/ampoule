@@ -2,42 +2,63 @@
 title: just another stupid idea
 priority: today
 assigned_to: Oleg Andreev
-status: opened
+status: closed
 created_at: 2009-11-01 14:31:25.273894 +01:00
-modified_at: 2009-11-02 18:33:22.178642 +01:00
+modified_at: 2009-11-04 09:51:18.431087 +01:00
 comments: 
 - !ruby/struct:Ampoule::Comment 
   author: Oleg Andreev
   date: 2009-11-01 14:31:25.274662 +01:00
   status: opened
   body: ""
+  attachments: []
+
 - !ruby/struct:Ampoule::Comment 
   author: Oleg Andreev
   date: 2009-11-01 18:34:03.656453 +01:00
   status: 
   body: should i close this?
+  attachments: []
+
 - !ruby/struct:Ampoule::Comment 
   author: Oleg Andreev
   date: 2009-11-02 13:15:46.267736 +01:00
   status: closed
   body: ""
+  attachments: []
+
 - !ruby/struct:Ampoule::Comment 
   author: Yurii Rashkovskii
   date: 2009-11-02 18:12:38.710717 +01:00
   status: 
   body: no you should not
+  attachments: []
+
 - !ruby/struct:Ampoule::Comment 
   author: Yurii Rashkovskii
   date: 2009-11-02 18:12:42.014997 +01:00
   status: reopened
   body: ""
+  attachments: []
+
 - !ruby/struct:Ampoule::Comment 
   author: melfar
   date: 2009-11-02 18:29:51.351679 +01:00
   status: 
   body: i think he should
+  attachments: []
+
 - !ruby/struct:Ampoule::Comment 
   author: Oleg Andreev
   date: 2009-11-02 18:33:22.182945 +01:00
   status: 
   body: so what should i do now?
+  attachments: []
+
+- !ruby/struct:Ampoule::Comment 
+  author: Oleg Andreev
+  date: 2009-11-04 09:51:18.436427 +01:00
+  status: closed
+  body: ""
+  attachments: []
+
