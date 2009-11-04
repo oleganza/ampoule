@@ -2,9 +2,9 @@
 title: file test
 priority: today
 assigned_to: Oleg Andreev
-status: closed
+status: opened
 created_at: 2009-11-02 18:11:23.502681 +01:00
-modified_at: 2009-11-04 09:22:01.425966 +01:00
+modified_at: 2009-11-04 09:22:08.821306 +01:00
 comments: 
 - !ruby/struct:Ampoule::Comment 
   author: Yurii Rashkovskii
@@ -292,6 +292,13 @@ comments:
   author: Oleg Andreev
   date: 2009-11-04 09:22:01.449209 +01:00
   status: closed
+  body: ""
+  attachments: []
+
+- !ruby/struct:Ampoule::Comment 
+  author: Oleg Andreev
+  date: 2009-11-04 09:22:08.853284 +01:00
+  status: reopened
   body: ""
   attachments: []
 
