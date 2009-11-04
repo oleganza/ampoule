@@ -1,15 +1,22 @@
 --- !ruby/struct:Ampoule::Task 
 title: do that
 priority: today
-assigned_to: "Gwendal Rou\xC3\xA9"
-status: opened
+assigned_to: Oleg Andreev
+status: closed
 created_at: 2009-11-04 10:05:08.379586 +01:00
-modified_at: 2009-11-04 10:05:08.379125 +01:00
+modified_at: 2009-11-04 10:10:03.220871 +01:00
 comments: 
 - !ruby/struct:Ampoule::Comment 
   author: Oleg Andreev
   date: 2009-11-04 10:05:08.380314 +01:00
   status: opened
   body: ""
+  attachments: []
+
+- !ruby/struct:Ampoule::Comment 
+  author: Oleg Andreev
+  date: 2009-11-04 10:10:03.222667 +01:00
+  status: assigned to Oleg Andreev
+  body: "done. "
   attachments: []
 
