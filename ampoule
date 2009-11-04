@@ -47,6 +47,39 @@ require 'thread'
 require 'yaml'
 require 'strscan'
 
+# bugfix
+module WEBrick::HTTPUtils
+  def parse_form_data(io, boundary)
+    # BUG here: boundary may contain '+' and will break regexp:
+    # boundary_regexp = /\A--#{boundary}(--)?#{CRLF}\z/
+    boundary_regexp = /\A--#{Regexp.quote(boundary)}(--)?#{WEBrick::CRLF}\z/
+    form_data = Hash.new
+    return form_data unless io
+    data = nil
+    io.each{|line|
+      if boundary_regexp =~ line
+        if data
+          data.chop!
+          key = data.name
+          if form_data.has_key?(key)
+            form_data[key].append_data(data)
+          else
+            form_data[key] = data 
+          end
+        end
+        data = FormData.new
+        next
+      else
+        if data
+          data << line
+        end
+      end
+    }
+    return form_data
+  end
+  module_function :parse_form_data
+end
+
 module Kernel
   def const(name, value = nil)
     if !const_defined?(name)
@@ -905,7 +938,8 @@ module Ampoule
       "#{rand(2**128).to_s(16)}#{ext}"
     end
     
-    def post
+    def post      
+      
       current_person = param(:current_person)
       if current_person != current_user_name && !current_person.blank?
         self.current_user_name = current_person # remember new value
@@ -1202,7 +1236,7 @@ module Ampoule
             img do
               #float :left
               margin "10px 15px 10px 0"
-              _webkit_box_shadow "#666 0px 5px 40px"
+              _webkit_box_shadow "#666 0px 5px 15px"
               max_width "70%"
             end
           end
