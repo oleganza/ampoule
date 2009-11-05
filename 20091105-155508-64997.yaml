@@ -4,12 +4,35 @@ priority: today
 assigned_to: Oleg Andreev
 status: opened
 created_at: 2009-11-05 15:55:08.289225 +01:00
-modified_at: 2009-11-05 15:55:08.288689 +01:00
+modified_at: 2009-11-05 16:06:48.597143 +01:00
 comments: 
 - !ruby/struct:Ampoule::Comment 
   author: Oleg Andreev
   date: 2009-11-05 15:55:08.290225 +01:00
   status: opened
   body: ""
+  attachments: []
+
+- !ruby/struct:Ampoule::Comment 
+  author: Oleg Andreev
+  date: 2009-11-05 16:06:48.598885 +01:00
+  status: 
+  body: "Some people do not care about \"assigning\" dropdown. For those ignorant dudes the \"Save\" button should simply be \"reassign to responsible guy\" or \"reply\".\r\n\
+    \r\n\
+    In other words, there are two fields: \"task responsible\" and \"comment recipients\"\r\n\
+    So here is the requirement:\r\n\
+    \r\n\
+    \xE2\x80\x94 system should preserve \"assigned to\" marker across the conversation, it should not be treated like a person upon whom the work is blocked;\r\n\
+    \xE2\x80\x94 at the same time, for the commentor there should be a track of unanswered comments (or tasks related to unanswered comments), as well there should be a track of comments awaiting your reply.\r\n\
+    \r\n\
+    Finally, you have three groups of pending tasks:\r\n\
+    \r\n\
+    a) tasks assigned to you which are not blocked by any request\r\n\
+    b) tasks assigned to you which are blocked by request to someone else\r\n\
+    c) other tasks blocked by request for your activity\r\n\
+    \r\n\
+    \xE2\x80\x94 the top priority is (c) since it requires your activity and affects both you and the other guy\r\n\
+    \xE2\x80\x94 second priority is (a) since it also requires your activity\r\n\
+    \xE2\x80\x94 last priority is (b) since it is doesn't require your activity\r\n"
   attachments: []
 
