@@ -1,10 +1,10 @@
 --- !ruby/struct:Ampoule::Task 
 title: keep author in the task
-priority: today
+priority: later
 assigned_to: Oleg Andreev
 status: opened
 created_at: 2009-11-04 10:10:22.691108 +01:00
-modified_at: 2009-11-04 10:10:22.690174 +01:00
+modified_at: 2009-11-05 14:18:22.255075 +01:00
 comments: 
 - !ruby/struct:Ampoule::Comment 
   author: Oleg Andreev
