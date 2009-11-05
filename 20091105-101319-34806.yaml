@@ -1,0 +1,15 @@
+--- !ruby/struct:Ampoule::Task 
+title: find a way to put this on a webserver and still use the git to work offline
+priority: today
+assigned_to: Oleg Andreev
+status: opened
+created_at: 2009-11-05 10:13:19.376112 +01:00
+modified_at: 2009-11-05 10:13:19.375146 +01:00
+comments: 
+- !ruby/struct:Ampoule::Comment 
+  author: Oleg Andreev
+  date: 2009-11-05 10:13:19.376883 +01:00
+  status: opened
+  body: ""
+  attachments: []
+
