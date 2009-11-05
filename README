@@ -12,6 +12,7 @@ Your development history is never polluted with ampoule commits.
 Features:
   open/close tasks, assign to people and set priorities
   comments for tasks
+  file attachments
   offline work: tasks are stored in your project's repository
   autosync: updates are commited and pushed immediately, git pull is performed every 2-3 seconds
 
