@@ -1339,7 +1339,7 @@ module Ampoule
       end
     end
     
-    class Commiter < Actor
+    class Committer < Actor
       def initialize(pusher, buffer, mutex)
         super()
         @pusher = pusher
@@ -1381,7 +1381,7 @@ module Ampoule
       @buffer = {} # path => content
       @mutex = Mutex.new
       @pusher = Pusher.new
-      @commiter = Commiter.new(@pusher, @buffer, @mutex)
+      @committer = Committer.new(@pusher, @buffer, @mutex)
       @puller = Puller.new
       @puller.pull
     end
@@ -1389,7 +1389,7 @@ module Ampoule
     def stop
       puts "Ampoule::FileSyncBuffer: stopping..."
       @puller.stop
-      @commiter.stop
+      @committer.stop
       @pusher.stop
       puts "Ampoule::FileSyncBuffer: stopped."
     end
@@ -1405,7 +1405,7 @@ module Ampoule
         puts "Buffered #{data.size} bytes to #{path}" if ENV["DEBUG"]
         @buffer[path] = data
       end
-      @commiter.commit
+      @committer.commit
     end
     
     def glob(wildcard)
