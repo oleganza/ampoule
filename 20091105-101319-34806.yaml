@@ -4,7 +4,7 @@ priority: today
 assigned_to: Oleg Andreev
 status: opened
 created_at: 2009-11-05 10:13:19.376112 +01:00
-modified_at: 2009-11-05 10:52:06.204600 +01:00
+modified_at: 2009-11-05 10:55:04.932549 +01:00
 comments: 
 - !ruby/struct:Ampoule::Comment 
   author: Oleg Andreev
@@ -40,7 +40,13 @@ comments:
                GIT_COMMITTER_EMAIL
                GIT_COMMITTER_DATE
                EMAIL
-    
 
+  attachments: []
+
+- !ruby/struct:Ampoule::Comment 
+  author: Oleg Andreev
+  date: 2009-11-05 10:55:04.935854 +01:00
+  status: 
+  body: fcgi script should be placed inside a repository checkout, just like regular script is executed. That way, it will know url of the repo.
   attachments: []
 
