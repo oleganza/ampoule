@@ -4,7 +4,7 @@ priority: today
 assigned_to: Oleg Andreev
 status: opened
 created_at: 2009-11-05 15:55:08.289225 +01:00
-modified_at: 2009-11-05 16:06:48.597143 +01:00
+modified_at: 2009-11-05 16:12:32.258270 +01:00
 comments: 
 - !ruby/struct:Ampoule::Comment 
   author: Oleg Andreev
@@ -34,5 +34,12 @@ comments:
     \xE2\x80\x94 the top priority is (c) since it requires your activity and affects both you and the other guy\r\n\
     \xE2\x80\x94 second priority is (a) since it also requires your activity\r\n\
     \xE2\x80\x94 last priority is (b) since it is doesn't require your activity\r\n"
+  attachments: []
+
+- !ruby/struct:Ampoule::Comment 
+  author: Oleg Andreev
+  date: 2009-11-05 16:12:32.260517 +01:00
+  status: 
+  body: "Final outcome is that nobody except you should worry about the status of the task: if you are blocked by a question to me, only thing I have to do is to post an answer to you. When I do that, the ticket will be marked as not blocked again."
   attachments: []
 
