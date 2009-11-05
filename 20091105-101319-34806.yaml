@@ -4,7 +4,7 @@ priority: today
 assigned_to: Oleg Andreev
 status: opened
 created_at: 2009-11-05 10:13:19.376112 +01:00
-modified_at: 2009-11-05 10:55:04.932549 +01:00
+modified_at: 2009-11-05 11:17:57.779316 +01:00
 comments: 
 - !ruby/struct:Ampoule::Comment 
   author: Oleg Andreev
@@ -48,5 +48,28 @@ comments:
   date: 2009-11-05 10:55:04.935854 +01:00
   status: 
   body: fcgi script should be placed inside a repository checkout, just like regular script is executed. That way, it will know url of the repo.
+  attachments: []
+
+- !ruby/struct:Ampoule::Comment 
+  author: Oleg Andreev
+  date: 2009-11-05 11:17:57.790205 +01:00
+  status: 
+  body: |
+    When running as fcgi, ampoule requires http basic auth with name and password. Name is used later for git-commit.
+    
+    Encrypted password is taken from the encrypted_line from the users.yaml file:
+    
+      Oleg Andreev: 
+        encrypted_password: e49c75f0d2394ea21a44a38c65486362:1a44a38c68b866q2ec5c75f0e1904ff1
+    
+      # encrypted_password = sha1(password + ":" + salt)  + ":" + salt
+      # salt is a random hex number
+    
+    Webserver:
+    1) takes the name
+    2) finds the entry in the users.yaml file
+    3) takes the salt, computes sha1(password + ":" + salt) and compares with the encrypted password 
+    4) on success, it proceeds; on failure, asks again.
+
   attachments: []
 
