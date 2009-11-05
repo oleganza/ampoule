@@ -4,7 +4,7 @@ priority: today
 assigned_to: Oleg Andreev
 status: opened
 created_at: 2009-11-05 10:13:19.376112 +01:00
-modified_at: 2009-11-05 10:40:55.832922 +01:00
+modified_at: 2009-11-05 10:52:06.204600 +01:00
 comments: 
 - !ruby/struct:Ampoule::Comment 
   author: Oleg Andreev
@@ -21,6 +21,25 @@ comments:
     First, it should fcgi script to be served by Apache, which is the most easy solution. Preferably, the same script used standalone.
     
     Authentication info should be stored inside git repo, so anyone can fix auth issue if it happens.
+
+  attachments: []
+
+- !ruby/struct:Ampoule::Comment 
+  author: Oleg Andreev
+  date: 2009-11-05 10:52:06.206954 +01:00
+  status: 
+  body: |
+    these could be used to specify committer:
+    
+     $ man git-commit-tree
+    
+               GIT_AUTHOR_NAME
+               GIT_AUTHOR_EMAIL
+               GIT_AUTHOR_DATE
+               GIT_COMMITTER_NAME
+               GIT_COMMITTER_EMAIL
+               GIT_COMMITTER_DATE
+               EMAIL
     
 
   attachments: []
