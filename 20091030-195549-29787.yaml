@@ -2,11 +2,11 @@
 title: email notifications
 priority: today
 assigned_to: Oleg Andreev
-need_info_from: nobody
+need_info_from: Oleg Andreev
 status: opened
 author: nobody
 created_at: 2009-10-30 19:55:49.196422 +01:00
-modified_at: 2009-11-18 20:27:37.431255 +01:00
+modified_at: 2009-11-18 20:35:28.345037 +01:00
 comments: 
 - !ruby/struct:Ampoule::Comment 
   author: Oleg Andreev
@@ -76,5 +76,12 @@ comments:
   date: 2009-11-18 20:27:37.437811 +01:00
   status: 
   body: probably, should run the Mail.app with applescript
+  attachments: []
+
+- !ruby/struct:Ampoule::Comment 
+  author: Oleg Andreev
+  date: 2009-11-18 20:35:28.351105 +01:00
+  status: updated
+  body: ""
   attachments: []
 
