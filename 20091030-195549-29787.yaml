@@ -2,10 +2,10 @@
 title: email notifications
 priority: today
 assigned_to: Oleg Andreev
-need_info_from: Yurii Rashkovskii
+need_info_from: Oleg Andreev
 status: opened
 created_at: 2009-10-30 19:55:49.196422 +01:00
-modified_at: 2009-11-18 20:09:13.177738 +01:00
+modified_at: 2009-11-18 20:23:03.666485 +01:00
 comments: 
 - !ruby/struct:Ampoule::Comment 
   author: Oleg Andreev
@@ -53,6 +53,13 @@ comments:
   author: Oleg Andreev
   date: 2009-11-18 20:09:13.182142 +01:00
   status: assigned to Oleg Andreev
+  body: ""
+  attachments: []
+
+- !ruby/struct:Ampoule::Comment 
+  author: Oleg Andreev
+  date: 2009-11-18 20:23:03.671040 +01:00
+  status: needed info from Oleg Andreev
   body: ""
   attachments: []
 
