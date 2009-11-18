@@ -6,7 +6,7 @@ need_info_from: Michael Jordan
 status: opened
 author: nobody
 created_at: 2009-10-30 19:55:49.196422 +01:00
-modified_at: 2009-11-18 20:38:26.828407 +01:00
+modified_at: 2009-11-18 20:38:44.388875 +01:00
 comments: 
 - !ruby/struct:Ampoule::Comment 
   author: Oleg Andreev
@@ -167,5 +167,12 @@ comments:
   date: 2009-11-18 20:38:26.840578 +01:00
   status: assigned to Yurii Rashkovskii
   body: ""
+  attachments: []
+
+- !ruby/struct:Ampoule::Comment 
+  author: Oleg Andreev
+  date: 2009-11-18 20:38:44.401428 +01:00
+  status: 
+  body: la-la
   attachments: []
 
