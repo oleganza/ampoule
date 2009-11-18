@@ -3,9 +3,9 @@ title: add comments about reassigning
 priority: this week
 assigned_to: Oleg Andreev
 need_info_from: nobody
-status: opened
+status: closed
 created_at: 2009-11-01 20:16:28.143401 +01:00
-modified_at: 2009-11-18 20:24:02.362790 +01:00
+modified_at: 2009-11-18 20:24:26.189312 +01:00
 comments: 
 - !ruby/struct:Ampoule::Comment 
   author: Oleg Andreev
@@ -26,5 +26,12 @@ comments:
   date: 2009-11-18 20:24:02.365267 +01:00
   status: assigned to Oleg Andreev
   body: ""
+  attachments: []
+
+- !ruby/struct:Ampoule::Comment 
+  author: Oleg Andreev
+  date: 2009-11-18 20:24:26.237242 +01:00
+  status: closed
+  body: what was it? i don't remember. forget it.
   attachments: []
 
