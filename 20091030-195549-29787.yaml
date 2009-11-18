@@ -2,10 +2,10 @@
 title: email notifications
 priority: today
 assigned_to: Oleg Andreev
-need_info_from: melfar
+need_info_from: Oleg Andreev
 status: opened
 created_at: 2009-10-30 19:55:49.196422 +01:00
-modified_at: 2009-11-18 19:51:07.212236 +01:00
+modified_at: 2009-11-18 20:07:29.190187 +01:00
 comments: 
 - !ruby/struct:Ampoule::Comment 
   author: Oleg Andreev
@@ -32,6 +32,13 @@ comments:
   author: Oleg Andreev
   date: 2009-11-18 19:51:07.215187 +01:00
   status: needed info from melfar
+  body: ""
+  attachments: []
+
+- !ruby/struct:Ampoule::Comment 
+  author: Oleg Andreev
+  date: 2009-11-18 20:07:29.193332 +01:00
+  status: needed info from Oleg Andreev
   body: ""
   attachments: []
 
