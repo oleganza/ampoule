@@ -2,14 +2,23 @@
 title: keep author in the task
 priority: later
 assigned_to: Oleg Andreev
-status: opened
+need_info_from: nobody
+status: closed
+author: nobody
 created_at: 2009-11-04 10:10:22.691108 +01:00
-modified_at: 2009-11-05 14:18:22.255075 +01:00
+modified_at: 2009-11-18 20:26:55.409747 +01:00
 comments: 
 - !ruby/struct:Ampoule::Comment 
   author: Oleg Andreev
   date: 2009-11-04 10:10:22.737627 +01:00
   status: opened
   body: ""
+  attachments: []
+
+- !ruby/struct:Ampoule::Comment 
+  author: Oleg Andreev
+  date: 2009-11-18 20:26:55.411694 +01:00
+  status: closed
+  body: done.
   attachments: []
 
