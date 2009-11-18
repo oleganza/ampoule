@@ -2,17 +2,32 @@
 title: rename Ampoule to Sandwich
 priority: never
 assigned_to: Oleg Andreev
-status: opened
+need_info_from: nobody
+status: closed
+author: nobody
 created_at: 2009-11-01 14:33:23.082255 +01:00
-modified_at: 2009-11-03 11:41:50.723466 +01:00
+modified_at: 2009-11-18 20:30:01.805594 +01:00
 comments: 
 - !ruby/struct:Ampoule::Comment 
   author: Oleg Andreev
   date: 2009-11-01 14:33:23.083072 +01:00
   status: opened
   body: ""
+  attachments: []
+
 - !ruby/struct:Ampoule::Comment 
   author: Oleg Andreev
   date: 2009-11-03 11:41:50.725518 +01:00
   status: 
   body: test
+  attachments: []
+
+- !ruby/struct:Ampoule::Comment 
+  author: Oleg Andreev
+  date: 2009-11-18 20:30:01.808000 +01:00
+  status: closed
+  body: !binary |
+    0Log0YfQtdGA0YLRgw==
+
+  attachments: []
+
