@@ -1009,8 +1009,13 @@ module Ampoule
       need_info_from = param(:need_info_from)
       if task.need_info_from != need_info_from
         status = %{needed info from #{need_info_from}}
+        task.need_info_from = need_info_from
+      else
+        if task.need_info_from?(current_user_name)
+          task.need_info_from = nil
+          status = %{updated}
+        end
       end
-      task.need_info_from = need_info_from
       
       assigned_to = param(:assigned_to)
       if task.assigned_to != assigned_to
