@@ -1,0 +1,17 @@
+--- !ruby/struct:Ampoule::Task 
+title: shmest
+priority: today
+assigned_to: Dave Thomas
+need_info_from: nobody
+status: opened
+author: Oleg Andreev
+created_at: 2009-11-18 20:26:27.387262 +01:00
+modified_at: 2009-11-18 20:26:27.386472 +01:00
+comments: 
+- !ruby/struct:Ampoule::Comment 
+  author: Oleg Andreev
+  date: 2009-11-18 20:26:27.388066 +01:00
+  status: opened
+  body: ""
+  attachments: []
+
