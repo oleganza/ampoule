@@ -1,12 +1,12 @@
 --- !ruby/struct:Ampoule::Task 
 title: email notifications
 priority: today
-assigned_to: Yurii Rashkovskii
-need_info_from: Michael Jordan
+assigned_to: Oleg Andreev
+need_info_from: nobody
 status: opened
 author: nobody
 created_at: 2009-10-30 19:55:49.196422 +01:00
-modified_at: 2009-11-18 20:38:44.388875 +01:00
+modified_at: 2009-11-18 20:38:51.771881 +01:00
 comments: 
 - !ruby/struct:Ampoule::Comment 
   author: Oleg Andreev
@@ -174,5 +174,12 @@ comments:
   date: 2009-11-18 20:38:44.401428 +01:00
   status: 
   body: la-la
+  attachments: []
+
+- !ruby/struct:Ampoule::Comment 
+  author: Oleg Andreev
+  date: 2009-11-18 20:38:51.784569 +01:00
+  status: assigned to Oleg Andreev
+  body: ""
   attachments: []
 
