@@ -6,7 +6,7 @@ need_info_from: nobody
 status: opened
 author: nobody
 created_at: 2009-10-30 19:55:49.196422 +01:00
-modified_at: 2009-11-18 20:36:53.160863 +01:00
+modified_at: 2009-11-18 20:36:56.702018 +01:00
 comments: 
 - !ruby/struct:Ampoule::Comment 
   author: Oleg Andreev
