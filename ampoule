@@ -418,7 +418,7 @@ module Ampoule
     def [](key); send(key); end
   end
       
-  class Task < Model(:title, :priority, :assigned_to, :status, :created_at, :modified_at, :comments)
+  class Task < Model(:title, :priority, :assigned_to, :need_info_from, :status, :author, :created_at, :modified_at, :comments)
     attr_accessor :id
     
     const :OPENED
@@ -438,12 +438,14 @@ module Ampoule
       @id ||= Time.now.strftime("%Y%m%d-%H%M%S-#{rand(2**16).to_s.rjust(5,'0')}")
     end
     
-    default(:title)       { "Untitled" }
-    default(:priority)    { priorities.first }
-    default(:assigned_to) { "nobody" }
-    default(:created_at)  { Time.now }
-    default(:modified_at) { Time.now }
-    default(:comments)    { self.comments = [] }
+    default(:title)          { "Untitled" }
+    default(:priority)       { priorities.first }
+    default(:assigned_to)    { "nobody" }
+    default(:need_info_from) { "nobody" }
+    default(:author)         { "nobody" }
+    default(:created_at)     { Time.now }
+    default(:modified_at)    { Time.now }
+    default(:comments)       { self.comments = [] }
     
     def status
       super == CLOSED ? CLOSED : OPENED
@@ -455,6 +457,18 @@ module Ampoule
     
     def opened?
       !closed?
+    end
+    
+    def need_info?
+      need_info_from != "nobody"
+    end
+    
+    def need_info_from?(person)
+      need_info_from == person
+    end
+    
+    def assigned_to?(person)
+      assigned_to == person
     end
     
     def last_status_line
@@ -584,12 +598,21 @@ module Ampoule
         tasks.each do |task|
           tr do
             td(:class => "task-title textual") do
-              a(:href => "/#{task.id}"){ h(task.title) }
+              a(:href => "/#{task.id}") do 
+                if task.need_info? && task.assigned_to?(current_user_name)
+                  span :class => "need-info" do
+                    puts(h(task.title))
+                  end
+                else
+                  h(task.title) 
+                end
+              end
               small do
                 status = task.last_status_line.
                             gsub(/assigned to .*? (by .*)/i, "reassigned \\1").
                             gsub(/([^\.])\.\Z/,"\\1")
-                puts(h(status) + " ")
+                puts(h(status))
+                puts " "
                 nobr { task.modified_at.to_relative_string_if_recent.and{|s| "(#{s})" }.to_s} 
               end
             end
@@ -808,12 +831,18 @@ module Ampoule
     
     def index
       
+      need_info_tasks = []
       opened_tasks = []
       closed_tasks = []
       tasks.each do |t|
-        (t.closed? ? closed_tasks : opened_tasks) << t
+        (t.need_info_from?(current_user_name) ? need_info_tasks : (t.closed? ? closed_tasks : opened_tasks)) << t
       end
-      opened_tasks = opened_tasks.sort_by {|t| -t.modified_at.to_i }
+      need_info_tasks = need_info_tasks.sort_by {|t| -t.modified_at.to_i }
+      
+      opened_tasks = opened_tasks.sort_by do |t|
+        my = t.assigned_to?(current_user_name)
+        1/t.modified_at.to_f + (my ? 0 : 2) + (t.need_info? ? 1 : 0)
+      end
       closed_tasks = closed_tasks.sort_by {|t| -t.modified_at.to_i }
       
       opened_tasks_by_priority = opened_tasks.inject({}) do |hash, task|
@@ -830,7 +859,7 @@ module Ampoule
         end
                 
         form(:action => "/", :method => :POST, :class => 'new-task') do
-          tasks_table(opened_tasks_by_priority[priorities.first], :class => "opened-tasks") do
+          tasks_table([], :class => "opened-tasks") do
             tr :class => "new-task-row" do
               td :class => "task-title" do
                 input(:name => "title", :value => "", :id => :newitemtitle)
@@ -845,7 +874,12 @@ module Ampoule
           end # tasks_table
         end # new task form
         
-        priorities[1..-1].each do |priority|
+        if !need_info_tasks.blank?
+          h3(:class => "need-info") { "please reply" }
+          tasks_table(need_info_tasks, :class => "opened-tasks")
+        end
+        
+        priorities[0..-1].each do |priority|
           tasks = opened_tasks_by_priority[priority]
           if !tasks.blank?
             h3 { priority }
@@ -863,7 +897,7 @@ module Ampoule
     def post
       title = param(:title)
       assigned_to = param(:assigned_to)
-      task = Task.new(:title => title, :assigned_to => assigned_to)
+      task = Task.new(:title => title, :assigned_to => assigned_to, :author => current_user_name)
       task.add_comment(Comment.new(:author => current_user_name, :status => "opened"))
       save_task(task)
       $last_assigned_person = assigned_to
@@ -902,21 +936,34 @@ module Ampoule
             end
             ""
           end
+          
           br
+          
           input :class => "current-person", 
-                :name => 
-                :current_person, 
+                :name => :current_person, 
                 :value => current_user_name, 
                 :tabindex => -1
-          br
+                    
+          div :class => "task-option-buttons" do
+            label { "assigned to" }
+            assign_tag(:value => task.assigned_to)
+            
+            nobr do
+              label { "need info from" }
+              assign_tag(:name => "need_info_from", :value => task.need_info_from)
+            end
+            
+            
+            nobr do
+              label { "priority" }
+              select_tag(:name => :priority, :value => task.priority, :options => task.priorities)
+            end
+          end
+          
           textarea(:name => :comment, :id => :comment, :rows => 10, :cols => 80) { }
           
           div :class => "buttons panel" do
             div :class => "save-buttons" do
-              label { "assigned to " }
-              assign_tag(:value => task.assigned_to)
-              label { "priority " }
-              select_tag(:name => :priority, :value => task.priority, :options => task.priorities)
               submit_button(:name => :save, :value => :Save)
             end
             div :class => "status-buttons" do
@@ -938,7 +985,7 @@ module Ampoule
       "#{rand(2**128).to_s(16)}#{ext}"
     end
     
-    def post      
+    def post
       
       current_person = param(:current_person)
       if current_person != current_user_name && !current_person.blank?
@@ -954,15 +1001,26 @@ module Ampoule
         attachments << attachment
       end
       
+      status = nil
+      
       task.title = param(:title)
       task.priority = param(:priority)
-      assigned_to = param(:assigned_to)
       
-      status = nil
+      need_info_from = param(:need_info_from)
+      if task.need_info_from != need_info_from
+        status = %{needed info from #{need_info_from}}
+        task.need_info_from = need_info_from
+      else
+        if task.need_info_from?(current_user_name)
+          task.need_info_from = nil
+          status = %{updated}
+        end
+      end
+      
+      assigned_to = param(:assigned_to)
       if task.assigned_to != assigned_to
         status = %{assigned to #{assigned_to}}
       end
-      
       task.assigned_to = assigned_to
       
       status_changed = !param(:close).blank? || !param(:reopen).blank?
@@ -1042,11 +1100,15 @@ module Ampoule
         
         h3 {
           font :size => "0.9em", :weight => :normal
-          margin "1em 0 -1.39em -7em"
+          margin "0em 0 -1.39em -7em"
           width 6.em
           color "#999"
           text_align :right
         }
+        
+        h3 ".need-info" do
+          color "#c00"
+        end
         
         a { color "#333" }
         a(:hover) { color "#000" }
@@ -1070,6 +1132,11 @@ module Ampoule
         _ ".tasks" do
           width       "100%"
           margin_left "-1px"
+          margin_bottom "0.9em"
+          
+          _ ".need-info" do
+            color "#c00"
+          end
           
           td do 
             font     :family => app_font_family, :size => 0.9.em
@@ -1126,6 +1193,24 @@ module Ampoule
         end
 
         _ ".edit-task" do
+          
+          _ ".task-option-buttons" do
+            position :relative
+            overflow :hidden
+            font :size => 0.9.em
+            margin :top => 0.3.em, :bottom => 0.em
+            label do
+              font :size => 0.9.em
+              line_height 1.9.em
+              margin :right => 0.5.em
+            end
+            select do
+              font :size => "100%", :family => app_font_family
+              margin "3px 24px 4px 0px"
+            end
+          end
+          
+          
           textarea do
             font :size => 0.9.em, :family => app_font_family
             padding 0.4.em
