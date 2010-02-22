@@ -1,0 +1,17 @@
+--- !ruby/struct:Ampoule::Task 
+title: typ1
+priority: today
+assigned_to: Yurii Rashkovskii
+need_info_from: nobody
+status: opened
+author: Oleg Andreev
+created_at: 2010-02-22 14:39:34.606234 +01:00
+modified_at: 2010-02-22 14:39:34.605109 +01:00
+comments: 
+- !ruby/struct:Ampoule::Comment 
+  author: Oleg Andreev
+  date: 2010-02-22 14:39:34.607087 +01:00
+  status: opened
+  body: ""
+  attachments: []
+
